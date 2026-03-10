@@ -13,6 +13,9 @@ from dataclasses import dataclass
 import sys
 from typing import Optional
 
+ANSI_RED = "\033[31m"
+ANSI_RESET = "\033[0m"
+
 
 @dataclass
 class AssemblerError:
@@ -55,7 +58,7 @@ class ErrorHandler:
         if stream is None:
             stream = sys.stderr
         for err in self.errors:
-            print(self._format_error(err), file=stream)
+            print(color_error(self._format_error(err)), file=stream)
 
     def has_fatal(self) -> bool:
         return any(err.is_fatal for err in self.errors)
@@ -64,3 +67,6 @@ class ErrorHandler:
         self.emit()
         raise SystemExit(exit_code)
 
+
+def color_error(message: str) -> str:
+    return f"{ANSI_RED}{message}{ANSI_RESET}"

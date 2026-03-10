@@ -257,7 +257,17 @@ def parse_tokens(tokens: list[Token], total_lines: int | None = None) -> list[St
         body = code_tokens[idx:]
         head = body[0]
 
-        if head.token_type == "DIRECTIVE":
+        # Legacy compatibility: allow "name .DATA ..." and "name .BLOCK ..."
+        # in addition to ".DATA name ..." / ".BLOCK name ..."
+        if (
+            len(body) >= 2
+            and body[0].token_type in {"OPERAND", "MNEMONIC"}
+            and body[1].token_type == "DIRECTIVE"
+            and body[1].value in {".DATA", ".BLOCK"}
+        ):
+            reordered = [body[1], body[0], *body[2:]]
+            statements.append(_parse_directive_statement(line_number, label, reordered))
+        elif head.token_type == "DIRECTIVE":
             statements.append(_parse_directive_statement(line_number, label, body))
         else:
             statements.append(_parse_instruction_statement(line_number, label, body))

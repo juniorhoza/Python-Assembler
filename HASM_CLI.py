@@ -5,7 +5,7 @@ import sys
 import os
 
 from services.HASM_opcode_Loader import load_opcode_table
-from services.errors import ErrorHandler
+from services.errors import ErrorHandler, color_error
 from services.lexer import tokenize_source, LexicalError
 from services.parser import parse_tokens, check_program_structure, ParserError
 
@@ -70,6 +70,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_OPCODE_PATH,
         help="Path to opcode table file (default: ./halix_v25.opcode)",
     )
+    parser.add_argument(
+        "--trace",
+        action="store_true",
+        help="Print lexer tokens and parser statements for debugging.",
+    )
     return parser
 
 
@@ -98,6 +103,27 @@ def validate_args(source_file: str, error_handler: ErrorHandler) -> str:
 def derive_output_paths(source_file: str) -> tuple[str, str]:
     base = source_file[:-4]
     return base + ".hlx", base + ".hll"
+
+
+def _print_trace_tokens(tokens) -> None:
+    print("\n[TRACE] LEXER TOKENS")
+    for tok in tokens:
+        print(
+            f"  line={tok.line_number:>3} col={tok.column:>3} "
+            f"type={tok.token_type:<10} value={tok.value}"
+        )
+
+
+def _print_trace_statements(statements) -> None:
+    print("\n[TRACE] PARSER STATEMENTS")
+    for st in statements:
+        label = st.label if st.label is not None else "-"
+        mnemonic = st.mnemonic if st.mnemonic is not None else "-"
+        operands = ", ".join(st.operands) if st.operands else "-"
+        print(
+            f"  line={st.line_number:>3} kind={st.kind:<11} "
+            f"label={label:<10} mnemonic={mnemonic:<8} operands={operands}"
+        )
 
 
 def main():
@@ -152,10 +178,12 @@ def main():
             keep_comments=True,
         )
     except LexicalError as e:
-        print(str(e), file=sys.stderr)
+        print(color_error(str(e)), file=sys.stderr)
         sys.exit(6)
 
     print(f"Lexer OK: {len(lexer_tokens)} tokens generated.")
+    if args.trace:
+        _print_trace_tokens(lexer_tokens)
 
     # ------------------------------------------------------------------
     # Step 4: Parse token stream into statements
@@ -163,10 +191,12 @@ def main():
     try:
         statements = parse_tokens(lexer_tokens, total_lines=len(source_lines))
     except ParserError as e:
-        print(str(e), file=sys.stderr)
+        print(color_error(str(e)), file=sys.stderr)
         sys.exit(7)
 
     print(f"Parser OK: {len(statements)} statements generated.")
+    if args.trace:
+        _print_trace_statements(statements)
 
     # ------------------------------------------------------------------
     # Step 5: Validate program structure from parsed statements
