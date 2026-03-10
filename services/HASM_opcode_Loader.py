@@ -6,7 +6,7 @@ halix_v25.opcode file at runtime.
 
 CLIENT REQUIREMENT: No hard-coded opcodes in assembler logic.
 Adding new instructions requires only updating halix_v25.opcode
-and halix_v25.opcode.cfg — no Python source changes needed.
+for opcode numbers. Operand grouping is now static (design-document groups).
 
 Opcode file format (confirmed from halix_v25.opcode):
     00 #NOOP#
@@ -14,23 +14,27 @@ Opcode file format (confirmed from halix_v25.opcode):
     ...
     99 #HALT#
 
-Operand type config file format (halix_v25.opcode.cfg):
-    # Maps operand_type to comma-separated mnemonic list
-    none    = NOOP,CLEAR,SET,INCR,DECR,SHACC,RET,SHINDX,...
-    branch  = BRANCH,BRT,BRF,BSUB
-    immediate = SETI,ADDI,SUBI,MULTI,DIVI,MODI
-    # All others default to: data (require data memory address)
 """
 
 import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-# Operand type constants — used by pass-2 encoder, not hard-coded opcode numbers
+# Operand type constants — used by pass-2 encoder
 OPERAND_NONE      = "none"        # instruction takes no operand (00 used)
 OPERAND_BRANCH    = "branch"      # operand is an instruction label address
 OPERAND_IMMEDIATE = "immediate"   # operand is an immediate value (=NN form)
 OPERAND_DATA      = "data"        # operand is a data memory address (default)
+
+# Static instruction grouping from design document section 3.4.1
+NO_OPERAND_MNEMONICS = {
+    "NOOP", "CLEAR", "SET", "INCR", "DECR", "SHACC", "RET", "SHINDX",
+    "ICLR", "IREAD", "IWRITE", "ILOAD", "ISTORE", "IINCR", "IDECR",
+    "IADD", "ISUB", "IMULT", "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ",
+    "ICNE", "ICGE", "ICGT", "SHBASE", "MOVEB", "MOVEA", "IMOVEA", "HALT",
+}
+BRANCH_MNEMONICS = {"BRANCH", "BRT", "BRF", "BSUB"}
+IMMEDIATE_MNEMONICS = {"SETI", "ADDI", "SUBI", "MULTI", "DIVI", "MODI"}
 
 
 @dataclass
@@ -84,46 +88,27 @@ def _parse_opcode_file(opcode_path: str) -> dict[str, str]:
     return mnemonic_to_numeric
 
 
-def _parse_cfg_file(cfg_path: str) -> dict[str, str]:
-    """
-    Parse halix_v25.opcode.cfg into {mnemonic: operand_type}.
-    Format: operand_type = MNEMONIC1, MNEMONIC2, ...
-    Lines starting with # are comments.
-    Mnemonics not listed default to OPERAND_DATA.
-    """
-    mnemonic_to_type = {}
-    if not os.path.isfile(cfg_path):
-        print(f"WARNING: Opcode config file '{cfg_path}' not found. "
-              f"All instructions will default to operand type '{OPERAND_DATA}'.")
-        return mnemonic_to_type
-
-    with open(cfg_path, "r") as f:
-        for raw in f:
-            line = raw.split("#")[0].strip()
-            if not line or "=" not in line:
-                continue
-            operand_type, mnemonics_str = line.split("=", 1)
-            operand_type = operand_type.strip().lower()
-            for m in mnemonics_str.split(","):
-                mnemonic = m.strip().upper()
-                if mnemonic:
-                    mnemonic_to_type[mnemonic] = operand_type
-    return mnemonic_to_type
+def _operand_type_for_mnemonic(mnemonic: str) -> str:
+    m = mnemonic.upper()
+    if m in NO_OPERAND_MNEMONICS:
+        return OPERAND_NONE
+    if m in BRANCH_MNEMONICS:
+        return OPERAND_BRANCH
+    if m in IMMEDIATE_MNEMONICS:
+        return OPERAND_IMMEDIATE
+    return OPERAND_DATA
 
 
 # -----------------------------------------------------------------------
 # Public loader
 # -----------------------------------------------------------------------
 
-def load_opcode_table(opcode_path: str, cfg_path: Optional[str] = None) -> OpcodeTable:
+def load_opcode_table(opcode_path: str) -> OpcodeTable:
     """
-    Load the opcode table dynamically from halix_v25.opcode (and optional .cfg).
+    Load the opcode table dynamically from halix_v25.opcode.
 
     Args:
         opcode_path: Path to halix_v25.opcode
-        cfg_path:    Path to halix_v25.opcode.cfg (operand type config).
-                     If None, defaults to same directory as opcode_path.
-
     Returns:
         A fully populated OpcodeTable ready for use by pass-1 and pass-2.
 
@@ -137,21 +122,15 @@ def load_opcode_table(opcode_path: str, cfg_path: Optional[str] = None) -> Opcod
             f"Expected in Halix_Software/."
         )
 
-    # Derive default cfg path if not provided
-    if cfg_path is None:
-        cfg_path = opcode_path + ".cfg"
-
     mnemonic_to_numeric = _parse_opcode_file(opcode_path)
     if not mnemonic_to_numeric:
         raise ValueError(
             f"FATAL: Opcode table file '{opcode_path}' produced no valid entries."
         )
 
-    mnemonic_to_type = _parse_cfg_file(cfg_path)
-
     table = OpcodeTable()
     for mnemonic, numeric in mnemonic_to_numeric.items():
-        operand_type = mnemonic_to_type.get(mnemonic, OPERAND_DATA)
+        operand_type = _operand_type_for_mnemonic(mnemonic)
         entry = OpcodeEntry(
             numeric=numeric,
             mnemonic=mnemonic,

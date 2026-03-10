@@ -1,38 +1,30 @@
 #!/usr/bin/env python3
-"""
-hasm_cli.py
------------
-CLI entry point for the Halix Assembler (Python implementation).
-
-Confirmed legacy behavior replicated:
-  - Exactly one positional argument required.
-  - Source file must have .hal extension.
-  - Version banner printed on every run.
-  - Exit codes:
-      1 -> wrong number of arguments
-      2 -> wrong file extension
-      3 -> file not found
-      4 -> opcode table missing or invalid
-      5 -> directive structure invalid
-
-Client requirements addressed here:
-  - Opcode table loaded dynamically (no hard-coded opcodes).
-  - Directive structure validated before assembly begins.
-  - Rich error reporting to console and listing file.
-"""
 
 import argparse
 import sys
 import os
 
-from hasm_directive_checker import check_directives, report_results
-from hasm_opcode_loader import load_opcode_table
+from services.HASM_opcode_Loader import load_opcode_table
+from services.errors import ErrorHandler
+from services.lexer import tokenize_source, LexicalError
+from services.parser import parse_tokens, check_program_structure, ParserError
 
-BANNER = """
-Halix Assembler version 11 / 2012 Jan 23 (c) EL Jones
-Halix Assembler version 13 / 2024 Nov 20 (c) EL Jones
-Halix Assembler version v25 / 2025 Mar 22 (c) EL Jones
-[Python port — team implementation]
+BANNER = r"""
+
+ _   _    _    _     _____  __   __    _    ____  ____  _____ __  __ ____  _     _____ ____
+| | | |  / \  | |   |_ _\ \/ /  / \  / ___|| ___|| ____|  \/  | __ )| |   | ____|  _ \
+| |_| | / _ \ | |    | | \  /  / _ \ \___ \|___ \|  _| | |\/| |  _ \| |   |  _| | |_) |
+|  _  |/ ___ \| |___ | | /  \ / ___ \ ___) |___) | |___| |  | | |_) | |___| |___|  _ <
+|_| |_/_/   \_\_____|___/_/\_/_/   \_\____/|____/|_____|_|  |_|____/|_____|_____|_| \_\
+
+
+
+developed by Assembler Warriors
+
+devs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+QA : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+
+inspired by Dr jones's Halix assembler
 """
 
 USAGE_MSG = """
@@ -50,12 +42,7 @@ USAGE_MSG = """
 
 # Path to the opcode table — relative to this script's location
 _HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_OPCODE_PATH = os.path.join(
-    _HERE, "..", "Halix_Software", "halix_v25.opcode"
-)
-DEFAULT_CFG_PATH = os.path.join(
-    _HERE, "..", "Halix_Software", "halix_v25.opcode.cfg"
-)
+DEFAULT_OPCODE_PATH = os.path.join(_HERE, "halix_v25.opcode")
 
 
 def print_banner():
@@ -81,23 +68,30 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--opcode-table",
         default=DEFAULT_OPCODE_PATH,
-        help="Path to opcode table file (default: Halix_Software/halix_v25.opcode)",
-    )
-    parser.add_argument(
-        "--opcode-cfg",
-        default=DEFAULT_CFG_PATH,
-        help="Path to opcode operand-type config (default: Halix_Software/halix_v25.opcode.cfg)",
+        help="Path to opcode table file (default: ./halix_v25.opcode)",
     )
     return parser
 
 
-def validate_args(source_file: str) -> str:
+def validate_args(source_file: str, error_handler: ErrorHandler) -> str:
     if not source_file.endswith(".hal"):
-        print(f"Input file '{source_file}' must have .hal extension.")
-        sys.exit(2)
+        error_handler.report(
+            code="E001",
+            message=f"Input file '{source_file}' must have .hal extension.",
+            line=1,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(2)
     if not os.path.isfile(source_file):
-        print(f"Input file '{source_file}' NOT FOUND - FATAL.")
-        sys.exit(3)
+        error_handler.report(
+            code="E000",
+            message=f"Input file '{source_file}' NOT FOUND - FATAL.",
+            line=1,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(3)
     return source_file
 
 
@@ -116,7 +110,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    source_file = validate_args(args.source_file)
+    error_handler = ErrorHandler(default_filename=args.source_file)
+
+    source_file = validate_args(args.source_file, error_handler)
     hlx_file, hll_file = derive_output_paths(source_file)
 
     print("****  HASM EXECUTION STARTING ...")
@@ -129,52 +125,71 @@ def main():
     # Step 1: Load opcode table dynamically — NO hard-coded opcodes
     # ------------------------------------------------------------------
     try:
-        opcode_table = load_opcode_table(args.opcode_table, args.opcode_cfg)
+        opcode_table = load_opcode_table(args.opcode_table)
     except (FileNotFoundError, ValueError) as e:
-        print(str(e))
-        sys.exit(4)
+        error_handler.report(
+            code="E000",
+            message=str(e),
+            line=0,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(4)
 
     # ------------------------------------------------------------------
-    # Step 2: Validate directive structure
+    # Step 2: Read source file
     # ------------------------------------------------------------------
     with open(source_file) as f:
         source_lines = f.readlines()
 
-    directive_result = check_directives(source_lines)
-    report_results(directive_result, source_file)
+    # ------------------------------------------------------------------
+    # Step 3: Lex source to tokens (labels, mnemonics, operands, comments)
+    # ------------------------------------------------------------------
+    try:
+        lexer_tokens = tokenize_source(
+            source_lines=source_lines,
+            opcode_mnemonics=set(opcode_table.by_mnemonic.keys()),
+            keep_comments=True,
+        )
+    except LexicalError as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(6)
 
-    if not directive_result.ok:
-        sys.exit(5)
+    print(f"Lexer OK: {len(lexer_tokens)} tokens generated.")
 
     # ------------------------------------------------------------------
-    # Step 3: Hand off to assembler pipeline (future modules)
+    # Step 4: Parse token stream into statements
     # ------------------------------------------------------------------
-    # from hasm_pass1 import run_pass1
-    # from hasm_pass2 import run_pass2
-    # from hasm_output import write_output
-    #
-    # symbol_tables = run_pass1(source_lines, directive_result, opcode_table)
-    # object_code   = run_pass2(source_lines, directive_result, symbol_tables, opcode_table)
-    # write_output(object_code, hlx_file, hll_file)
+    try:
+        statements = parse_tokens(lexer_tokens, total_lines=len(source_lines))
+    except ParserError as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(7)
 
-    print("[CLI OK] Opcode table loaded and directive validation passed. Pipeline not yet connected.")
+    print(f"Parser OK: {len(statements)} statements generated.")
+
+    # ------------------------------------------------------------------
+    # Step 5: Validate program structure from parsed statements
+    # ------------------------------------------------------------------
+    structure_result = check_program_structure(statements)
+    for warning in structure_result.warnings:
+        print(f"WARNING {warning.code}: {warning.message}")
+
+    if not structure_result.ok:
+        for issue in structure_result.errors:
+            error_handler.report(
+                code=issue.code,
+                message=issue.message,
+                line=issue.line,
+                filename=source_file,
+                is_fatal=issue.is_fatal,
+            )
+        error_handler.emit_and_exit(5)
+
+    print(f"Program structure OK [{source_file}].")
+
+    print("[CLI OK] Opcode table loaded, lexer/parser completed, structure validation passed.")
 
 
 if __name__ == "__main__":
     main()
-```
-
----
-
-## Updated file layout
-```
-project-test-bed/
-├── Halix_Software/
-│   ├── halix_v25.opcode        ← existing, unchanged
-│   ├── halix_v25.opcode.cfg    ← NEW — operand type config
-│   └── ...
-└── Python-Assembler/
-    ├── hasm_cli.py              ← updated
-    ├── hasm_directive_checker.py ← updated (.BLOCK added)
-    ├── hasm_opcode_loader.py    ← NEW
-    └── (future: pass1, pass2, output, error handler)
