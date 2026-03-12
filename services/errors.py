@@ -14,6 +14,7 @@ import sys
 from typing import Optional
 
 ANSI_RED = "\033[31m"
+ANSI_YELLOW = "\033[33m"
 ANSI_RESET = "\033[0m"
 
 
@@ -70,3 +71,7 @@ class ErrorHandler:
 
 def color_error(message: str) -> str:
     return f"{ANSI_RED}{message}{ANSI_RESET}"
+
+
+def color_warning(message: str) -> str:
+    return f"{ANSI_YELLOW}{message}{ANSI_RESET}"
