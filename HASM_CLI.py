@@ -5,26 +5,26 @@ import sys
 import os
 
 from services.HASM_opcode_Loader import load_opcode_table
-from services.errors import ErrorHandler, color_error
+from services.errors import ErrorHandler, color_error, color_warning
 from services.lexer import tokenize_source, LexicalError
+from services.pass1 import run_pass1, Pass1Error
 from services.parser import parse_tokens, check_program_structure, ParserError
 
 BANNER = r"""
 
- _   _    _    _     _____  __   _     ___  ____  _____ ______ _____ __    _____ ____
-| | | |  / \  | |   |_ _\ \/ /  / \  / ___|| ___|| ____|  \/  | __ )| |   | ____|  _ \
-| |_| | / _ \ | |    | | \  /  / _ \ \___ \|___ \|  _| | |\/| |  _ \| |   |  _| | |_) |
-|  _  |/ ___ \| |___ | | /  \ / ___ \ ___) |___) | |___| |  | | |_) | |___| |___|  _ <
-|_| |_/_/   \_\_____|___/_/\_/_/   \_\____/|____/|_____|_|  |_|____/|_____|_____|_| \_\
+██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
 
+Developed by Assembler Warriors
 
+DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
 
-developed by Assembler Warriors
-
-devs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
-QA : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
-
-inspired by Dr jones's Halix assembler
+inspired by Dr. Jones's Halix Assembler
 """
 
 USAGE_MSG = """
@@ -126,6 +126,40 @@ def _print_trace_statements(statements) -> None:
         )
 
 
+def _print_trace_pass1(pass1_result) -> None:
+    print("\n[TRACE] PASS1 DATA TABLE")
+    if not pass1_result.data_table:
+        print("  <empty>")
+    for entry in pass1_result.data_table.values():
+        values = ", ".join(entry.values) if entry.values else entry.value
+        print(
+            f"  name={entry.name:<10} addr={entry.address} size={entry.size:<3} "
+            f"values={values}"
+        )
+
+    print("\n[TRACE] PASS1 LABEL TABLE")
+    if not pass1_result.label_table:
+        print("  <empty>")
+    for entry in pass1_result.label_table.values():
+        print(f"  name={entry.name:<10} addr={entry.address} line={entry.line_number}")
+
+    print("\n[TRACE] PASS1 LOCATION COUNTER")
+    if not pass1_result.line_to_iaddr:
+        print("  <empty>")
+    for line_number, addr in pass1_result.line_to_iaddr.items():
+        print(f"  line={line_number:>3} iaddr={addr}")
+
+    print(
+        f"\n[TRACE] PASS1 SUMMARY\n"
+        f"  code_size={pass1_result.code_size:02d}\n"
+        f"  data_size={pass1_result.data_size:02d}"
+    )
+    if pass1_result.warnings:
+        print("  warnings:")
+        for warning in pass1_result.warnings:
+            print(f"    {warning}")
+
+
 def main():
     print_banner()
 
@@ -203,7 +237,7 @@ def main():
     # ------------------------------------------------------------------
     structure_result = check_program_structure(statements)
     for warning in structure_result.warnings:
-        print(f"WARNING {warning.code}: {warning.message}")
+        print(color_warning(f"WARNING {warning.code}: {warning.message}"))
 
     if not structure_result.ok:
         for issue in structure_result.errors:
@@ -218,8 +252,35 @@ def main():
 
     print(f"Program structure OK [{source_file}].")
 
-    print("[CLI OK] Opcode table loaded, lexer/parser completed, structure validation passed.")
+    # ------------------------------------------------------------------
+    # Step 6: Pass 1 build data/label tables and track location counters
+    # ------------------------------------------------------------------
+    try:
+        pass1_result = run_pass1(statements)
+    except Pass1Error as e:
+        print(color_error(str(e)), file=sys.stderr)
+        sys.exit(8)
+
+    print(
+        "Pass1 OK: "
+        f"{len(pass1_result.data_table)} data symbols, "
+        f"{len(pass1_result.label_table)} labels, "
+        f"code_size={pass1_result.code_size:02d}, "
+        f"data_size={pass1_result.data_size:02d}."
+    )
+    for warning in pass1_result.warnings:
+        print(color_warning(f"WARNING: {warning}"))
+    if args.trace:
+        _print_trace_pass1(pass1_result)
+
+    print("Assembler execution OK.")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as exc:
+        print(color_error(f"Internal Assembler Error: {exc}"), file=sys.stderr)
+        sys.exit(99)

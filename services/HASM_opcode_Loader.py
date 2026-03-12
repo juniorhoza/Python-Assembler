@@ -20,6 +20,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
+from services.errors import color_warning
+
 # Operand type constants — used by pass-2 encoder
 OPERAND_NONE      = "none"        # instruction takes no operand (00 used)
 OPERAND_BRANCH    = "branch"      # operand is an instruction label address
@@ -76,13 +78,13 @@ def _parse_opcode_file(opcode_path: str) -> dict[str, str]:
                 continue
             parts = line.split()
             if len(parts) < 2:
-                print(f"WARNING: Malformed opcode entry at line {lineno}: '{line}' — skipped.")
+                print(color_warning(f"WARNING: Malformed opcode entry at line {lineno}: '{line}' - skipped."))
                 continue
             numeric = parts[0].zfill(2)
             # Strip the # delimiters that the legacy assembler uses
             mnemonic = parts[1].replace("#", "").strip().upper()
             if mnemonic in mnemonic_to_numeric:
-                print(f"WARNING: Duplicate mnemonic '{mnemonic}' at line {lineno} — first entry kept.")
+                print(color_warning(f"WARNING: Duplicate mnemonic '{mnemonic}' at line {lineno} - first entry kept."))
                 continue
             mnemonic_to_numeric[mnemonic] = numeric
     return mnemonic_to_numeric

@@ -73,8 +73,16 @@ def _validate_identifier(tok: Token, what: str) -> None:
 def _validate_symbol_name(tok: Token, what: str) -> None:
     _validate_identifier(tok, what)
     # Prevent variables/blocks from shadowing instruction mnemonics.
-    if tok.token_type == "MNEMONIC":
+    symbol = tok.value.upper()
+    if (
+        symbol in NO_OPERAND_MNEMONICS
+        or symbol in BRANCH_MNEMONICS
+        or symbol in IMMEDIATE_MNEMONICS
+        or tok.token_type == "MNEMONIC"
+    ):
         raise ParserError(tok.line_number, f"{what} '{tok.value}' cannot be an instruction name", tok.column)
+    if tok.value.startswith("."):
+        raise ParserError(tok.line_number, f"{what} '{tok.value}' cannot be a directive name", tok.column)
 
 
 def _normalize_operands(tokens: list[Token]) -> list[str]:
@@ -246,6 +254,7 @@ def parse_tokens(tokens: list[Token], total_lines: int | None = None) -> list[St
         label: str | None = None
         idx = 0
         if code_tokens[0].token_type == "LABEL_DEF":
+            _validate_symbol_name(code_tokens[0], "label name")
             label = code_tokens[0].value
             idx = 1
 
