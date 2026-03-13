@@ -1,0 +1,8 @@
+        .ALLOC 6
+MYARR .Block 5
+idx .DATA =0
+        .BEGIN
+LOAD    idx
+WRITE   idx
+HALT
+        .END

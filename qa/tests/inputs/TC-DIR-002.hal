@@ -1,0 +1,4 @@
+        .BEGIN
+LOAD    x
+HALT
+        .END

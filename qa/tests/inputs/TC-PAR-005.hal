@@ -1,0 +1,10 @@
+        .ALLOC 2
+x .DATA =1
+y .DATA
+        .BEGIN
+LOAD    x
+JUMPGT  SKIP
+STORE   y
+SKIP WRITE   x
+HALT
+        .END
