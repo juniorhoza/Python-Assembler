@@ -9,6 +9,8 @@ from services.errors import ErrorHandler, color_error, color_warning
 from services.lexer import tokenize_source, LexicalError
 from services.pass1 import run_pass1, Pass1Error
 from services.parser import parse_tokens, check_program_structure, ParserError
+from services.pass2 import run_pass2, Pass2Error
+from services.output import write_hlx, write_hll
 
 BANNER = r"""
 
@@ -31,7 +33,7 @@ USAGE_MSG = """
  -----------------------------------------------------------
  USAGE ERROR: ONE argument required.
 
- CORRECT USAGE:  python hasm_cli.py source.hal
+ CORRECT USAGE:  python HASM_CLI.py source.hal
 
     where:
 
@@ -160,6 +162,21 @@ def _print_trace_pass1(pass1_result) -> None:
             print(f"    {warning}")
 
 
+def _print_trace_pass2(pass2_result) -> None:
+    print("\n[TRACE] PASS2 ENCODED INSTRUCTIONS")
+    if not pass2_result.instructions:
+        print("  <empty>")
+    for instr in pass2_result.instructions:
+        print(
+            f"  line={instr.line_number:>3} iaddr={instr.iaddr} "
+            f"word={instr.machine_word}  {instr.source_text}"
+        )
+    if pass2_result.errors:
+        print("\n[TRACE] PASS2 ERRORS")
+        for err in pass2_result.errors:
+            print(f"  {err}")
+
+
 def main():
     print_banner()
 
@@ -253,7 +270,7 @@ def main():
     print(f"Program structure OK [{source_file}].")
 
     # ------------------------------------------------------------------
-    # Step 6: Pass 1 build data/label tables and track location counters
+    # Step 6: Pass 1 — build data/label tables and track location counters
     # ------------------------------------------------------------------
     try:
         pass1_result = run_pass1(statements)
@@ -273,6 +290,48 @@ def main():
     if args.trace:
         _print_trace_pass1(pass1_result)
 
+    # ------------------------------------------------------------------
+    # Step 7: Pass 2 — encode instructions to machine words
+    # ------------------------------------------------------------------
+    try:
+        pass2_result = run_pass2(
+            statements=statements,
+            pass1_result=pass1_result,
+            opcode_table=opcode_table,
+            source_lines=source_lines,
+        )
+    except Pass2Error as e:
+        print(color_error(str(e)), file=sys.stderr)
+        sys.exit(9)
+
+    for warning in pass2_result.warnings:
+        print(color_warning(f"WARNING: {warning}"))
+
+    if not pass2_result.ok:
+        for err in pass2_result.errors:
+            print(color_error(err), file=sys.stderr)
+        print("WARNING: Assembly completed with errors. Output files written.")
+
+    print(f"Pass2 OK: {len(pass2_result.instructions)} instructions encoded.")
+    if args.trace:
+        _print_trace_pass2(pass2_result)
+
+    # ------------------------------------------------------------------
+    # Step 8: Write output files (.hlx and .hll)
+    # ------------------------------------------------------------------
+    write_hlx(hlx_file, pass1_result, pass2_result)
+    write_hll(
+        hll_path=hll_file,
+        source_file=source_file,
+        hlx_path=hlx_file,
+        pass1_result=pass1_result,
+        pass2_result=pass2_result,
+        source_lines=source_lines,
+        statements=statements,
+    )
+
+    print(f"Output written: {hlx_file}")
+    print(f"Output written: {hll_file}")
     print("Assembler execution OK.")
 
 
