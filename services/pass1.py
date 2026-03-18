@@ -263,9 +263,10 @@ def _build_label_table(
         if st.label is not None:
             label_name = st.label.upper()
             if label_name in label_table:
-                warnings.append(
-                    f"Line {st.line_number}: duplicate label '{label_name}' — "
-                    f"first definition (addr {label_table[label_name].address}) kept."
+                first_line = label_table[label_name].line_number
+                raise Pass1Error(
+                    f"Line {st.line_number}: duplicate label '{label_name}' "
+                    f"previously defined at line {first_line}."
                 )
             else:
                 label_table[label_name] = LabelEntry(

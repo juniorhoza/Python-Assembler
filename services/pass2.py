@@ -166,8 +166,8 @@ def run_pass2(
                 label_entry = label_table.get(label_name)
                 if label_entry is None:
                     result.errors.append(
-                        f"ERROR E020 Line {st.line_number}: "
-                        f"undefined label '{label_name}' — addr 99 used."
+                        f"ERROR E021 Line {st.line_number}: "
+                        f"undefined label '{label_name}' "
                     )
                     machine_word = opcode + "99"
                 else:

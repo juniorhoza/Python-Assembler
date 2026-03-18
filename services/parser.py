@@ -352,6 +352,42 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
                     )
                 )
 
+    for st in statements:
+        if st.line_number <= end_line:
+            continue
+        if st.kind == "BLANK":
+            continue
+        result.errors.append(
+            StructureIssue(
+                code="E004",
+                message=(
+                    f"Statement at line {st.line_number} appears after .END (line {end_line}). "
+                    ".END must terminate the program."
+                ),
+                line=st.line_number,
+                is_fatal=True,
+            )
+        )
+
+    executable_before_end = [
+        st for st in statements
+        if st.line_number < end_line and st.kind == "INSTRUCTION"
+    ]
+    if executable_before_end:
+        last_instruction = executable_before_end[-1]
+        if last_instruction.mnemonic != "HALT":
+            result.errors.append(
+                StructureIssue(
+                    code="E004",
+                    message=(
+                        f"Last instruction before .END must be HALT, found "
+                        f"'{last_instruction.mnemonic}' at line {last_instruction.line_number}."
+                    ),
+                    line=last_instruction.line_number,
+                    is_fatal=True,
+                )
+            )
+
     if alloc_line is not None:
         if data_lines and alloc_line > data_lines[0]:
             result.errors.append(
@@ -427,15 +463,15 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
         )
 
     if len(alloc_lines) > 1:
-        result.warnings.append(
+        result.errors.append(
             StructureIssue(
-                code="W004",
+                code="E004",
                 message=(
                     f"Multiple .ALLOC directives at lines {alloc_lines}. "
-                    f"First occurrence (line {alloc_line}) used."
+                    "Only one .ALLOC directive is allowed."
                 ),
-                line=alloc_line if alloc_line is not None else 0,
-                is_fatal=False,
+                line=alloc_lines[1],
+                is_fatal=True,
             )
         )
 
