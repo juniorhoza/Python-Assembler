@@ -1,0 +1,11 @@
+# TC-GEN-002: Instructions before data in .hlx output
+# FR-GEN-002: Output format — instructions first, then data
+# Expected: .hlx file has instruction words before data words
+        .ALLOC 2
+x .DATA =5
+y .DATA =0
+        .BEGIN
+LOAD    x
+STORE   y
+HALT
+        .END

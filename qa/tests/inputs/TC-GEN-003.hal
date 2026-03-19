@@ -1,0 +1,9 @@
+# TC-GEN-003: .hlx output file produced
+# FR-GEN-003: Assembler produces .hlx file with correct name
+# Expected: TC-GEN-003.hlx file created after assembly
+        .ALLOC 1
+n .DATA =7
+        .BEGIN
+WRITE   n
+HALT
+        .END

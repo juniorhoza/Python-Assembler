@@ -1,0 +1,15 @@
+# TC-GEN-001: Machine code correctness
+# FR-GEN-001: Correct binary encoding for each instruction
+# Expected: Assembles correctly, machine code matches reference
+        .ALLOC 3
+a .DATA =3
+b .DATA =4
+c .DATA =0
+        .BEGIN
+READ    a
+LOAD    a
+MULT    b
+STORE   c
+WRITE   c
+HALT
+        .END
