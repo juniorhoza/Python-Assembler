@@ -1,0 +1,14 @@
+# TC-SYM-006: Location counter / address tracking
+# FR-SYM-006: Assembler tracks memory addresses correctly
+# Expected: Instructions assigned sequential addresses starting at 00
+# LOAD at 00, STORE at 01, WRITE at 02, BRANCH at 03, HALT at 04
+        .ALLOC 2
+x .DATA =5
+y .DATA =0
+        .BEGIN
+LOOP:   LOAD    x
+        STORE   y
+        WRITE   y
+        BRANCH  LOOP
+        HALT
+        .END

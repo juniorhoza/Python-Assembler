@@ -1,0 +1,9 @@
+# TC-SYM-003: Undefined label reference
+# Expected: Error "Undefined label: MISSING"
+        .ALLOC 1
+x .DATA =1
+        .BEGIN
+        LOAD x
+        BRT MISSING
+        HALT
+        .END

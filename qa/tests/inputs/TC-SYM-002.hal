@@ -1,0 +1,11 @@
+# TC-SYM-002: Duplicate label detection
+# Expected: Error "Duplicate label: LOOP" with line number
+        .ALLOC 1
+x .DATA =0
+        .BEGIN
+LOOP:   LOAD x
+        INCR
+        STORE x
+LOOP:   WRITE x
+        HALT
+        .END

@@ -1,0 +1,9 @@
+.ALLOC 4
+x .DATA =3
+y .DATA
+.ALLOC 2
+z .DATA
+        .BEGIN
+LOAD x
+HALT
+        .END
