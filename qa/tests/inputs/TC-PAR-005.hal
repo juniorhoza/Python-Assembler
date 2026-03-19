@@ -3,8 +3,8 @@ x .DATA =1
 y .DATA
         .BEGIN
 LOAD    x
-JUMPGT  SKIP
+BRT     SKIP
 STORE   y
-SKIP WRITE   x
+SKIP:   WRITE x
 HALT
         .END

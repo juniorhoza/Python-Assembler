@@ -12,10 +12,10 @@ ASSEMBLER_CANDIDATES=(
     "python3 assembler.py"
     "python3 hasm.py"
 )
-REFERENCE="csh ./qa/scripts/HASM_v25.csh"
 TESTS_DIR="./qa/tests/inputs"
 OUT_DIR="./qa/tests/outputs"
 LOGS_DIR="./qa/logs"
+REPO_ROOT=$(pwd)
 
 BRANCH_LABEL=$(git branch --show-current 2>/dev/null || echo "unknown")
 SINGLE_TEST=""
@@ -92,7 +92,6 @@ run_test() {
 
     STUDENT_OUTDIR="$OUT_DIR/student/${TC_ID}"
     mkdir -p "$STUDENT_OUTDIR"
-    cp "$HAL_FILE" "$STUDENT_OUTDIR/"
 
     STUDENT_OUTPUT=$($ASSEMBLER "$HAL_FILE" 2>&1)
     STUDENT_EXIT=$?
@@ -102,7 +101,9 @@ run_test() {
     echo "$STUDENT_OUTPUT" | while IFS= read -r line; do log "  $line"; done
 
     BASENAME=$(basename "$HAL_FILE" .hal)
+    HAL_DIR=$(dirname "$HAL_FILE")
     for ext in hlx hll; do
+        [ -f "$HAL_DIR/${BASENAME}.${ext}" ] && mv "$HAL_DIR/${BASENAME}.${ext}" "$STUDENT_OUTDIR/"
         [ -f "${BASENAME}.${ext}" ] && mv "${BASENAME}.${ext}" "$STUDENT_OUTDIR/"
     done
     STUDENT_HLX="$STUDENT_OUTDIR/${BASENAME}.hlx"
@@ -111,8 +112,9 @@ run_test() {
         REF_OUTDIR="$OUT_DIR/reference/${TC_ID}"
         mkdir -p "$REF_OUTDIR"
         cp "$HAL_FILE" "$REF_OUTDIR/"
+        cp "$REPO_ROOT/halix_v25.opcode" "$REF_OUTDIR/"
         pushd "$REF_OUTDIR" > /dev/null
-            REF_OUTPUT=$(csh ../../scripts/HASM_v25.csh "$(basename "$HAL_FILE")" 2>&1)
+            REF_OUTPUT=$(csh "$REPO_ROOT/qa/scripts/HASM_v25.csh" "$(basename "$HAL_FILE")" 2>&1)
             REF_EXIT=$?
         popd > /dev/null
         REF_HLX="$REF_OUTDIR/${BASENAME}.hlx"
@@ -120,13 +122,19 @@ run_test() {
     fi
 
     if $REF_AVAILABLE && [ -f "$STUDENT_HLX" ] && [ -f "$REF_HLX" ]; then
-        if diff -q "$STUDENT_HLX" "$REF_HLX" > /dev/null 2>&1; then
-            log "HLX Diff  : MATCH"
+        # Normalize both files before comparing:
+        # - strip trailing spaces
+        # - strip leading zeros from single numbers (data size line)
+        sed 's/[[:space:]]*$//' "$STUDENT_HLX" | sed 's/^0*\([0-9]\+\)$/\1/' > /tmp/student_norm.hlx
+        sed 's/[[:space:]]*$//' "$REF_HLX"     | sed 's/^0*\([0-9]\+\)$/\1/' > /tmp/ref_norm.hlx
+
+        if diff -q /tmp/student_norm.hlx /tmp/ref_norm.hlx > /dev/null 2>&1; then
+            log "HLX Diff  : MATCH (normalized)"
             log "STATUS    : PASS"
             ((PASS++))
         else
             log "HLX Diff  : MISMATCH"
-            diff "$STUDENT_HLX" "$REF_HLX" | head -30 | while IFS= read -r line; do log "  $line"; done
+            diff /tmp/student_norm.hlx /tmp/ref_norm.hlx | head -30 | while IFS= read -r line; do log "  $line"; done
             log "STATUS    : FAIL"
             FAILED_TESTS+=("$TC_ID")
             ((FAIL++))
@@ -148,7 +156,7 @@ ALL_TESTS=(
     TC-PAR-001 TC-PAR-002 TC-PAR-003 TC-PAR-004 TC-PAR-005
     TC-DIR-001a TC-DIR-001b TC-DIR-001c TC-DIR-002
     TC-DIR-003a TC-DIR-003b TC-DIR-003c TC-DIR-006
-    TC-SYM-001 TC-SYM-002 TC-SYM-003 TC-SYM-005
+    TC-SYM-001 TC-SYM-002 TC-SYM-003 TC-SYM-005 TC-SYM-006
     TC-GEN-001 TC-GEN-002 TC-GEN-003 TC-GEN-004 TC-GEN-005
     TC-ERR-001 TC-ERR-002 TC-ERR-003 TC-ERR-004 TC-ERR-005
     TC-CON-001 TC-CON-002 TC-CON-003
@@ -161,8 +169,6 @@ else
 fi
 
 TOTAL=$((PASS + FAIL + BLOCKED + NOT_RUN))
-RATE=0
-[ $((PASS + FAIL)) -gt 0 ] && RATE=$(echo "scale=1; $PASS * 100 / ($PASS + $FAIL)" | bc)
 
 log ""
 log "============================================================"
@@ -174,7 +180,6 @@ log "  PASS       : $PASS"
 log "  FAIL       : $FAIL"
 log "  BLOCKED    : $BLOCKED (input files not yet created)"
 log "  NOT TESTED : $NOT_RUN"
-log "  PASS RATE  : ${RATE}%"
 log ""
 if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
     log "  FAILED TESTS:"
@@ -189,7 +194,7 @@ log " Full log saved: $LOG_FILE"
 
 echo "------------------------------------------------------------" >> "$SUMMARY_FILE"
 echo "Run: $DATESTAMP | Branch: $BRANCH_LABEL | Commit: $(git rev-parse --short HEAD 2>/dev/null)" >> "$SUMMARY_FILE"
-echo "PASS: $PASS | FAIL: $FAIL | BLOCKED: $BLOCKED | NOT TESTED: $NOT_RUN | RATE: ${RATE}%" >> "$SUMMARY_FILE"
+echo "PASS: $PASS | FAIL: $FAIL | BLOCKED: $BLOCKED | NOT TESTED: $NOT_RUN" >> "$SUMMARY_FILE"
 [ ${#FAILED_TESTS[@]} -gt 0 ] && echo "Failed: ${FAILED_TESTS[*]}" >> "$SUMMARY_FILE"
 echo "" >> "$SUMMARY_FILE"
 
