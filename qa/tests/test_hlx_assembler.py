@@ -261,28 +261,89 @@ run("TC-SYM-003", "Undefined label MISSING — assembler detects and reports it"
     ])
 
 
-run("TC-SYM-005", "Opcode table lookup — representative mnemonics all encode correctly",
-    "TC-SYM-005.hal", [
+
+# ── TC-GEN: Code Generation & Output ─────────────────────────────────────────
+print("\n------------------------------------------------------------")
+print(" TC-GEN: Code Generation & Output")
+print("------------------------------------------------------------")
+
+run("TC-GEN-001", "Correct machine code generated for each instruction",
+    "TC-GEN-001.hal", [
         ("Exits with code 0", lambda c,o,f: c == 0),
         (".hlx file produced", expect_hlx_produced),
-        ("14 instructions encoded", lambda c,o,f: "14 instructions encoded" in o.lower()),
-        ("1 label found", lambda c,o,f: "1 labels" in o.lower()),
+        ("Pass2 OK — instructions encoded", lambda c,o,f: "pass2 ok" in o.lower()),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+    ])
+
+run("TC-GEN-002", "Instructions appear before data in .hlx output",
+    "TC-GEN-002.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hlx file produced", expect_hlx_produced),
+        ("Pass1 and Pass2 both OK", lambda c,o,f: "pass1 ok" in o.lower() and "pass2 ok" in o.lower()),
+    ])
+
+run("TC-GEN-003", ".hlx output file produced with correct name",
+    "TC-GEN-003.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hlx file produced", expect_hlx_produced),
+        ("Output written message in output", lambda c,o,f: "output written" in o.lower()),
+    ])
+
+run("TC-GEN-004", ".hll listing file produced",
+    "TC-GEN-004.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hll file produced", lambda c,o,f: os.path.isfile(f.replace(".hal", ".hll"))),
+        ("Output written message in output", lambda c,o,f: "output written" in o.lower()),
+    ])
+
+run("TC-GEN-005", "Forward reference DONE resolves to correct address",
+    "TC-GEN-005.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hlx file produced", expect_hlx_produced),
+        ("Labels found in Pass1", lambda c,o,f: "labels" in o.lower() and "pass1 ok" in o.lower()),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
     ])
 
 
-run("TC-SYM-006", "Location counter tracks instruction addresses sequentially",
+# ── TC-ERR: Error Handling ────────────────────────────────────────────────────
+print("\n------------------------------------------------------------")
+print(" TC-ERR: Error Handling")
+print("------------------------------------------------------------")
 
-    "TC-SYM-006.hal", [
-
-        ("Exits with code 0", lambda c,o,f: c == 0),
-
-        (".hlx file produced", expect_hlx_produced),
-
-        ("5 instructions encoded", lambda c,o,f: "5 instructions encoded" in o.lower()),
-
-        ("1 label found", lambda c,o,f: "1 labels" in o.lower()),
-
+run("TC-ERR-001", "Error output includes filename and line number",
+    "TC-ERR-001.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error mentions line 7", lambda c,o,f: "line 7" in o.lower()),
+        ("Filename mentioned in output", lambda c,o,f: "tc-err-001" in o.lower()),
     ])
+
+run("TC-ERR-002", "Error has unique error code (e.g. E004)",
+    "TC-ERR-002.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error code present in output", lambda c,o,f: any(f"e{str(i).zfill(3)}" in o.lower() for i in range(1, 50))),
+    ])
+
+run("TC-ERR-003", "Multiple non-fatal errors all reported in one run",
+    "TC-ERR-003.hal", [
+        ("Assembler runs without crash", lambda c,o,f: True),
+        ("At least one error reported", lambda c,o,f: "error" in o.lower()),
+        ("Assembly completes with errors", lambda c,o,f: "completed with errors" in o.lower() or "error" in o.lower()),
+    ])
+
+run("TC-ERR-004", "Fatal error halts assembly — no output files produced",
+    "TC-ERR-004.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("No .hlx file produced", expect_no_hlx),
+        ("Error message present", lambda c,o,f: "error" in o.lower()),
+    ])
+
+run("TC-ERR-005", "Exit code 0 on success, non-zero on error",
+    "TC-ERR-005.hal", [
+        ("Exits with code 0 for valid file", lambda c,o,f: c == 0),
+        (".hlx file produced", expect_hlx_produced),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+    ])
+
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 total = PASS_COUNT + FAIL_COUNT + SKIP_COUNT

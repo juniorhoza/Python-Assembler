@@ -1,0 +1,713 @@
+============================================================
+ HLX ASSEMBLER QA TEST RUN
+ Date/Time  : 2026-03-18 13:57:06
+ Branch     : dev
+ Assembler  : python3 HASM_CLI.py
+ Tester     : Ruxandra Flueras
+ Git Commit : 9b18429
+============================================================
+
+------------------------------------------------------------
+TEST      : TC-PAR-001
+Input     : ./qa/tests/inputs/TC-PAR-001.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-001.hal
+    Output:  ./qa/tests/inputs/TC-PAR-001.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-001.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 25 tokens generated.
+  Parser OK: 13 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-PAR-001.hal].
+  Pass1 OK: 4 data symbols, 0 labels, code_size=06, data_size=04.
+  Pass2 OK: 6 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-PAR-001.hlx
+  Output written: ./qa/tests/inputs/TC-PAR-001.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-PAR-002
+Input     : ./qa/tests/inputs/TC-PAR-002.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-002.hal
+    Output:  ./qa/tests/inputs/TC-PAR-002.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-002.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 21 tokens generated.
+  Parser OK: 11 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-PAR-002.hal].
+  Pass1 OK: 3 data symbols, 0 labels, code_size=05, data_size=03.
+  Pass2 OK: 5 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-PAR-002.hlx
+  Output written: ./qa/tests/inputs/TC-PAR-002.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-PAR-003
+Input     : ./qa/tests/inputs/TC-PAR-003.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-003.hal
+    Output:  ./qa/tests/inputs/TC-PAR-003.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-003.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 15 tokens generated.
+  Parser OK: 8 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-PAR-003.hal].
+  Pass1 OK: 2 data symbols, 0 labels, code_size=03, data_size=06.
+  Pass2 OK: 3 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-PAR-003.hlx
+  Output written: ./qa/tests/inputs/TC-PAR-003.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-PAR-004
+Input     : ./qa/tests/inputs/TC-PAR-004.hal
+Exit Code : 7
+Output    :
+  [31mParser Error at line 6, column 1: unknown directive '.ENDING'[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-004.hal
+    Output:  ./qa/tests/inputs/TC-PAR-004.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-004.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 15 tokens generated.
+Ref Exit  : 1
+STATUS    : PASS (error case - assembler produced error output as expected)
+
+------------------------------------------------------------
+TEST      : TC-PAR-005
+Input     : ./qa/tests/inputs/TC-PAR-005.hal
+Exit Code : 7
+Output    :
+  [31mParser Error at line 6, column 1: expected mnemonic, found 'JUMPGT'[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-005.hal
+    Output:  ./qa/tests/inputs/TC-PAR-005.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-005.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 19 tokens generated.
+Ref Exit  : 1
+STATUS    : PASS (error case - assembler produced error output as expected)
+
+------------------------------------------------------------
+TEST      : TC-DIR-001a
+Input     : ./qa/tests/inputs/TC-DIR-001a.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-001a.hal
+    Output:  ./qa/tests/inputs/TC-DIR-001a.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-001a.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 16 tokens generated.
+  Parser OK: 9 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-DIR-001a.hal].
+  Pass1 OK: 2 data symbols, 0 labels, code_size=04, data_size=02.
+  Pass2 OK: 4 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-001a.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-001a.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-DIR-001b
+Input     : ./qa/tests/inputs/TC-DIR-001b.hal
+Exit Code : 5
+Output    :
+  [31m./qa/tests/inputs/TC-DIR-001b.hal:2: ERROR E004: .ALLOC (line 2) must appear before the first .DATA (line 1).[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-001b.hal
+    Output:  ./qa/tests/inputs/TC-DIR-001b.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-001b.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 14 tokens generated.
+  Parser OK: 8 statements generated.
+Ref Exit  : 1
+STATUS    : PASS (error case - assembler produced error output as expected)
+
+------------------------------------------------------------
+TEST      : TC-DIR-001c
+Input     : ./qa/tests/inputs/TC-DIR-001c.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-001c.hal
+    Output:  ./qa/tests/inputs/TC-DIR-001c.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-001c.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 16 tokens generated.
+  Parser OK: 9 statements generated.
+  [33mWARNING W004: Multiple .ALLOC directives at lines [1, 4]. First occurrence (line 1) used.[0m
+  Program structure OK [./qa/tests/inputs/TC-DIR-001c.hal].
+  Pass1 OK: 3 data symbols, 0 labels, code_size=02, data_size=03.
+  [33mWARNING: WARNING: 3 data variables exceed .ALLOC size 2. Data size expanded to 3.[0m
+  Pass2 OK: 2 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-001c.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-001c.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-DIR-002
+Input     : ./qa/tests/inputs/TC-DIR-002.hal
+Exit Code : 0
+Output    :
+  [31mERROR E030 Line 2: undefined variable 'X' — addr 99 used.[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-002.hal
+    Output:  ./qa/tests/inputs/TC-DIR-002.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-002.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 5 tokens generated.
+  Parser OK: 4 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-DIR-002.hal].
+  Pass1 OK: 0 data symbols, 0 labels, code_size=02, data_size=10.
+  WARNING: Assembly completed with errors. Output files written.
+  Pass2 OK: 2 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-002.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-002.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-DIR-003a
+Input     : ./qa/tests/inputs/TC-DIR-003a.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-003a.hal
+    Output:  ./qa/tests/inputs/TC-DIR-003a.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-003a.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 16 tokens generated.
+  Parser OK: 9 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-DIR-003a.hal].
+  Pass1 OK: 2 data symbols, 0 labels, code_size=04, data_size=02.
+  Pass2 OK: 4 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-003a.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-003a.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-DIR-003b
+Input     : ./qa/tests/inputs/TC-DIR-003b.hal
+Exit Code : 5
+Output    :
+  [31m./qa/tests/inputs/TC-DIR-003b.hal:0: ERROR E003: No .END directive found. Every Halix program must have a .END directive.[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-003b.hal
+    Output:  ./qa/tests/inputs/TC-DIR-003b.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-003b.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 13 tokens generated.
+  Parser OK: 7 statements generated.
+Ref Exit  : 1
+STATUS    : PASS (error case - assembler produced error output as expected)
+
+------------------------------------------------------------
+TEST      : TC-DIR-003c
+Input     : ./qa/tests/inputs/TC-DIR-003c.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-003c.hal
+    Output:  ./qa/tests/inputs/TC-DIR-003c.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-003c.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 16 tokens generated.
+  Parser OK: 9 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-DIR-003c.hal].
+  Pass1 OK: 2 data symbols, 0 labels, code_size=03, data_size=02.
+  Pass2 OK: 3 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-003c.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-003c.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-DIR-006
+Input     : ./qa/tests/inputs/TC-DIR-006.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-DIR-006.hal
+    Output:  ./qa/tests/inputs/TC-DIR-006.hlx  (machine code)
+             ./qa/tests/inputs/TC-DIR-006.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 15 tokens generated.
+  Parser OK: 8 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-DIR-006.hal].
+  Pass1 OK: 2 data symbols, 0 labels, code_size=03, data_size=06.
+  Pass2 OK: 3 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-DIR-006.hlx
+  Output written: ./qa/tests/inputs/TC-DIR-006.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-SYM-001
+Input     : ./qa/tests/inputs/TC-SYM-001.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-SYM-001.hal
+    Output:  ./qa/tests/inputs/TC-SYM-001.hlx  (machine code)
+             ./qa/tests/inputs/TC-SYM-001.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 39 tokens generated.
+  Parser OK: 19 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-SYM-001.hal].
+  Pass1 OK: 3 data symbols, 4 labels, code_size=11, data_size=03.
+  Pass2 OK: 11 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-SYM-001.hlx
+  Output written: ./qa/tests/inputs/TC-SYM-001.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-SYM-002
+Input     : ./qa/tests/inputs/TC-SYM-002.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-SYM-002.hal
+    Output:  ./qa/tests/inputs/TC-SYM-002.hlx  (machine code)
+             ./qa/tests/inputs/TC-SYM-002.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 19 tokens generated.
+  Parser OK: 11 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-SYM-002.hal].
+  Pass1 OK: 1 data symbols, 1 labels, code_size=05, data_size=01.
+  [33mWARNING: Line 9: duplicate label 'LOOP' — first definition (addr 00) kept.[0m
+  Pass2 OK: 5 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-SYM-002.hlx
+  Output written: ./qa/tests/inputs/TC-SYM-002.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-SYM-003
+Input     : ./qa/tests/inputs/TC-SYM-003.hal
+Exit Code : 0
+Output    :
+  [31mERROR E020 Line 7: undefined label 'MISSING' — addr 99 used.[0m
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-SYM-003.hal
+    Output:  ./qa/tests/inputs/TC-SYM-003.hlx  (machine code)
+             ./qa/tests/inputs/TC-SYM-003.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 14 tokens generated.
+  Parser OK: 9 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-SYM-003.hal].
+  Pass1 OK: 1 data symbols, 0 labels, code_size=03, data_size=01.
+  WARNING: Assembly completed with errors. Output files written.
+  Pass2 OK: 3 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-SYM-003.hlx
+  Output written: ./qa/tests/inputs/TC-SYM-003.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+------------------------------------------------------------
+TEST      : TC-SYM-005
+Input     : ./qa/tests/inputs/TC-SYM-005.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-GEN-001
+Input     : ./qa/tests/inputs/TC-GEN-001.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-GEN-002
+Input     : ./qa/tests/inputs/TC-GEN-002.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-GEN-003
+Input     : ./qa/tests/inputs/TC-GEN-003.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-GEN-004
+Input     : ./qa/tests/inputs/TC-GEN-004.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-GEN-005
+Input     : ./qa/tests/inputs/TC-GEN-005.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-ERR-001
+Input     : ./qa/tests/inputs/TC-ERR-001.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-ERR-002
+Input     : ./qa/tests/inputs/TC-ERR-002.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-ERR-003
+Input     : ./qa/tests/inputs/TC-ERR-003.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-ERR-004
+Input     : ./qa/tests/inputs/TC-ERR-004.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-ERR-005
+Input     : ./qa/tests/inputs/TC-ERR-005.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-CON-001
+Input     : ./qa/tests/inputs/TC-CON-001.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-CON-002
+Input     : ./qa/tests/inputs/TC-CON-002.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+------------------------------------------------------------
+TEST      : TC-CON-003
+Input     : ./qa/tests/inputs/TC-CON-003.hal
+STATUS    : BLOCKED
+REASON    : Input file not found - waiting on test team to create it
+
+============================================================
+ SUMMARY
+  Branch     : dev
+  Commit     : 9b18429
+  Total TCs  : 30
+  PASS       : 4
+  FAIL       : 0
+  BLOCKED    : 14 (input files not yet created)
+  NOT TESTED : 12
+
+  BLOCKED:
+    - TC-SYM-005
+    - TC-GEN-001
+    - TC-GEN-002
+    - TC-GEN-003
+    - TC-GEN-004
+    - TC-GEN-005
+    - TC-ERR-001
+    - TC-ERR-002
+    - TC-ERR-003
+    - TC-ERR-004
+    - TC-ERR-005
+    - TC-CON-001
+    - TC-CON-002
+    - TC-CON-003
+============================================================
+ Full log saved: ./qa/logs/run_2026-03-18_13-57-06_dev.log

@@ -1,0 +1,59 @@
+============================================================
+ HLX ASSEMBLER QA TEST RUN
+ Date/Time  : 2026-03-18 14:48:21
+ Branch     : dev
+ Assembler  : python3 HASM_CLI.py
+ Tester     : Ruxandra Flueras
+ Git Commit : 9b18429
+============================================================
+
+------------------------------------------------------------
+TEST      : TC-PAR-001
+Input     : ./qa/tests/inputs/TC-PAR-001.hal
+Exit Code : 0
+Output    :
+  
+  
+  ██╗  ██╗ █████╗ ██╗     ██╗██╗  ██╗        █████╗ ███████╗███████╗███████╗███╗   ███╗██████╗ ██╗     ███████╗██████╗
+  ██║  ██║██╔══██╗██║     ██║╚██╗██╔╝       ██╔══██╗██╔════╝██╔════╝██╔════╝████╗ ████║██╔══██╗██║     ██╔════╝██╔══██╗
+  ███████║███████║██║     ██║ ╚███╔╝        ███████║███████╗███████╗█████╗  ██╔████╔██║██████╔╝██║     █████╗  ██████╔╝
+  ██╔══██║██╔══██║██║     ██║ ██╔██╗        ██╔══██║╚════██║╚════██║██╔══╝  ██║╚██╔╝██║██╔══██╗██║     ██╔══╝  ██╔══██╗
+  ██║  ██║██║  ██║███████╗██║██╔╝ ██╗       ██║  ██║███████║███████║███████╗██║ ╚═╝ ██║██████╔╝███████╗███████╗██║  ██║
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝╚═╝  ╚═╝       ╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝
+  
+  Developed by Assembler Warriors
+  
+  DEVs : frankjunior1.hozalon@famu.edu , javonte1.carter@famu.edu
+  QAs : ruxandra1.flueras@famu.edu , elizabeth1.uzoho@famu.edu
+  
+  inspired by Dr. Jones's Halix Assembler
+  
+  ****  HASM EXECUTION STARTING ...
+    Source:  ./qa/tests/inputs/TC-PAR-001.hal
+    Output:  ./qa/tests/inputs/TC-PAR-001.hlx  (machine code)
+             ./qa/tests/inputs/TC-PAR-001.hll  (listing)
+  
+  Opcode table loaded: 61 instructions from '/home/codio/workspace/Python-Assembler/halix_v25.opcode'.
+  Lexer OK: 25 tokens generated.
+  Parser OK: 13 statements generated.
+  Program structure OK [./qa/tests/inputs/TC-PAR-001.hal].
+  Pass1 OK: 4 data symbols, 0 labels, code_size=06, data_size=04.
+  Pass2 OK: 6 instructions encoded.
+  Output written: ./qa/tests/inputs/TC-PAR-001.hlx
+  Output written: ./qa/tests/inputs/TC-PAR-001.hll
+  Assembler execution OK.
+Ref Exit  : 1
+STATUS    : NOT TESTED (reference unavailable or output missing)
+
+============================================================
+ SUMMARY
+  Branch     : dev
+  Commit     : 9b18429
+  Total TCs  : 1
+  PASS       : 0
+  FAIL       : 0
+  BLOCKED    : 0 (input files not yet created)
+  NOT TESTED : 1
+
+============================================================
+ Full log saved: ./qa/logs/run_2026-03-18_14-48-21_dev.log
