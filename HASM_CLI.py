@@ -310,7 +310,7 @@ def main():
     if not pass2_result.ok:
         for err in pass2_result.errors:
             print(color_error(err), file=sys.stderr)
-        print("WARNING: Assembly completed with errors. Output files written.")
+        sys.exit(9)
 
     print(f"Pass2 OK: {len(pass2_result.instructions)} instructions encoded.")
     if args.trace:
