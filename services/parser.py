@@ -21,7 +21,8 @@ class Statement:
 
 
 class ParserError(Exception):
-    def __init__(self, line: int, message: str, column: int | None = None):
+    def __init__(self, line: int, message: str, column: int | None = None, code: str = "E006"):
+        self.code = code
         self.line = line
         self.message = message
         self.column = column
@@ -29,8 +30,8 @@ class ParserError(Exception):
 
     def __str__(self) -> str:
         if self.column is None:
-            return f"Parser Error at line {self.line}: {self.message}"
-        return f"Parser Error at line {self.line}, column {self.column}: {self.message}"
+            return self.message
+        return f"{self.message} at column {self.column}"
 
 
 _IDENT_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")

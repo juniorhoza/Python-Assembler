@@ -42,8 +42,8 @@ class EncodedInstruction:
 @dataclass
 class Pass2Result:
     instructions: list[EncodedInstruction] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
+    errors: list["Pass2Issue"] = field(default_factory=list)
+    warnings: list["Pass2Issue"] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -51,7 +51,19 @@ class Pass2Result:
 
 
 class Pass2Error(Exception):
-    pass
+    def __init__(self, message: str, *, line: int = 0, code: str = "E008"):
+        self.code = code
+        self.line = line
+        self.message = message
+        super().__init__(message)
+
+
+@dataclass
+class Pass2Issue:
+    code: str
+    line: int
+    message: str
+    is_fatal: bool = True
 
 
 # -----------------------------------------------------------------------
@@ -100,7 +112,7 @@ def run_pass2(
                 end_line = st.line_number
 
     if begin_line is None or end_line is None:
-        raise Pass2Error("FATAL: .BEGIN or .END not found during Pass 2.")
+        raise Pass2Error(".BEGIN or .END not found during Pass 2.")
 
     i_addr = 0
 
@@ -123,7 +135,11 @@ def run_pass2(
         mnemonic = st.mnemonic
         if mnemonic is None:
             result.errors.append(
-                f"Line {st.line_number}: instruction has no mnemonic — skipped."
+                Pass2Issue(
+                    code="E008",
+                    line=st.line_number,
+                    message="instruction has no mnemonic.",
+                )
             )
             i_addr += 1
             continue
@@ -132,8 +148,11 @@ def run_pass2(
         entry = opcode_table.lookup(mnemonic)
         if entry is None:
             result.errors.append(
-                f"ERROR E010 Line {st.line_number}: "
-                f"unknown mnemonic '{mnemonic}' — opcode 00 used."
+                Pass2Issue(
+                    code="E010",
+                    line=st.line_number,
+                    message=f"unknown mnemonic '{mnemonic}' - opcode 00 used.",
+                )
             )
             machine_word = "0000"
             result.instructions.append(EncodedInstruction(
@@ -157,8 +176,11 @@ def run_pass2(
         elif operand_type == OPERAND_BRANCH:
             if not operands:
                 result.errors.append(
-                    f"ERROR E025 Line {st.line_number}: "
-                    f"'{mnemonic}' requires a label operand — addr 99 used."
+                    Pass2Issue(
+                        code="E025",
+                        line=st.line_number,
+                        message=f"'{mnemonic}' requires a label operand - addr 99 used.",
+                    )
                 )
                 machine_word = opcode + "99"
             else:
@@ -166,8 +188,11 @@ def run_pass2(
                 label_entry = label_table.get(label_name)
                 if label_entry is None:
                     result.errors.append(
-                        f"ERROR E021 Line {st.line_number}: "
-                        f"undefined label '{label_name}' "
+                        Pass2Issue(
+                            code="E021",
+                            line=st.line_number,
+                            message=f"undefined label '{label_name}' - addr 99 used.",
+                        )
                     )
                     machine_word = opcode + "99"
                 else:
@@ -177,8 +202,11 @@ def run_pass2(
         elif operand_type == OPERAND_IMMEDIATE:
             if not operands:
                 result.errors.append(
-                    f"ERROR E022 Line {st.line_number}: "
-                    f"'{mnemonic}' requires an immediate operand — value 00 used."
+                    Pass2Issue(
+                        code="E022",
+                        line=st.line_number,
+                        message=f"'{mnemonic}' requires an immediate operand - value 00 used.",
+                    )
                 )
                 machine_word = opcode + "00"
             else:
@@ -187,16 +215,23 @@ def run_pass2(
                 val_str = raw_op.lstrip("=").strip()
                 if not val_str.isdigit():
                     result.errors.append(
-                        f"ERROR E023 Line {st.line_number}: "
-                        f"immediate value '{raw_op}' is not numeric — value 00 used."
+                        Pass2Issue(
+                            code="E023",
+                            line=st.line_number,
+                            message=f"immediate value '{raw_op}' is not numeric - value 00 used.",
+                        )
                     )
                     machine_word = opcode + "00"
                 else:
                     ival = int(val_str)
                     if ival > 99:
                         result.warnings.append(
-                            f"WARNING Line {st.line_number}: "
-                            f"immediate value {ival} exceeds 2 digits — truncated."
+                            Pass2Issue(
+                                code="W005",
+                                line=st.line_number,
+                                message=f"immediate value {ival} exceeds 2 digits - truncated.",
+                                is_fatal=False,
+                            )
                         )
                         ival = ival % 100
                     machine_word = opcode + _zero_pad(ival)
@@ -205,8 +240,11 @@ def run_pass2(
         else:  # OPERAND_DATA
             if not operands:
                 result.errors.append(
-                    f"ERROR E026 Line {st.line_number}: "
-                    f"'{mnemonic}' requires a data operand — addr 99 used."
+                    Pass2Issue(
+                        code="E026",
+                        line=st.line_number,
+                        message=f"'{mnemonic}' requires a data operand - addr 99 used.",
+                    )
                 )
                 machine_word = opcode + "99"
             else:
@@ -214,8 +252,11 @@ def run_pass2(
                 data_entry = data_table.get(var_name)
                 if data_entry is None:
                     result.errors.append(
-                        f"ERROR E030 Line {st.line_number}: "
-                        f"undefined variable '{var_name}' — addr 99 used."
+                        Pass2Issue(
+                            code="E030",
+                            line=st.line_number,
+                            message=f"undefined variable '{var_name}' - addr 99 used.",
+                        )
                     )
                     machine_word = opcode + "99"
                 else:

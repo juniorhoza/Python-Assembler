@@ -53,7 +53,14 @@ class Pass1Result:
 
 class Pass1Error(Exception):
     """Raised on fatal Pass 1 errors."""
-    pass
+    def __init__(self, message: str, *, line: int = 0, code: str = "E007"):
+        self.code = code
+        self.line = line
+        self.message = message
+        super().__init__(message)
+
+    def __str__(self) -> str:
+        return self.message
 
 
 # -----------------------------------------------------------------------
@@ -114,18 +121,18 @@ def _build_data_table(
         # ── .DATA ──────────────────────────────────────────────────────
         if st.mnemonic == ".DATA":
             if not st.operands:
-                warnings.append(
-                    f"Line {st.line_number}: .DATA directive missing variable name — skipped."
+                raise Pass1Error(
+                    ".DATA directive missing variable name.",
+                    line=st.line_number,
                 )
-                continue
 
             var_name = st.operands[0].upper()
 
             if var_name in data_table:
-                warnings.append(
-                    f"Line {st.line_number}: duplicate variable '{var_name}' — first definition kept."
+                raise Pass1Error(
+                    f"duplicate variable '{var_name}' previously defined earlier in the data section.",
+                    line=st.line_number,
                 )
-                continue
 
             # Extract initial value: .DATA X = 5  or  .DATA X =5  or  .DATA X
             raw_value = 9999
@@ -149,25 +156,25 @@ def _build_data_table(
         if st.mnemonic == ".BLOCK":
             # Syntax confirmed by parser: .BLOCK <name> <size> [= v1,v2,...]
             if len(st.operands) < 2:
-                warnings.append(
-                    f"Line {st.line_number}: .BLOCK missing name or size — skipped."
+                raise Pass1Error(
+                    ".BLOCK missing name or size.",
+                    line=st.line_number,
                 )
-                continue
 
             block_name = st.operands[0].upper()
             if not st.operands[1].isdigit():
-                warnings.append(
-                    f"Line {st.line_number}: .BLOCK size must be numeric — skipped."
+                raise Pass1Error(
+                    ".BLOCK size must be numeric.",
+                    line=st.line_number,
                 )
-                continue
 
             block_size = int(st.operands[1])
 
             if block_name in data_table:
-                warnings.append(
-                    f"Line {st.line_number}: duplicate block '{block_name}' — first definition kept."
+                raise Pass1Error(
+                    f"duplicate block '{block_name}' previously defined earlier in the data section.",
+                    line=st.line_number,
                 )
-                continue
 
             # Parse optional initializer values
             init_values: list[str] = []
@@ -196,13 +203,10 @@ def _build_data_table(
             d_addr += block_size
             continue
 
-    # Expand d_size if more variables were declared than allocated
     if d_addr > d_size:
-        warnings.append(
-            f"WARNING: {d_addr} data variables exceed .ALLOC size {d_size}. "
-            f"Data size expanded to {d_addr}."
+        raise Pass1Error(
+            f".ALLOC value {d_size} is too small for allocated data cells {d_addr}.",
         )
-        d_size = d_addr
 
     return data_table, d_size, warnings
 
@@ -240,9 +244,9 @@ def _build_label_table(
                 end_line = st.line_number  # last .END wins
 
     if begin_line is None:
-        raise Pass1Error("FATAL: No .BEGIN directive found during Pass 1.")
+        raise Pass1Error("No .BEGIN directive found during Pass 1.")
     if end_line is None:
-        raise Pass1Error("FATAL: No .END directive found during Pass 1.")
+        raise Pass1Error("No .END directive found during Pass 1.")
 
     i_addr = 0
 
@@ -265,8 +269,8 @@ def _build_label_table(
             if label_name in label_table:
                 first_line = label_table[label_name].line_number
                 raise Pass1Error(
-                    f"Line {st.line_number}: duplicate label '{label_name}' "
-                    f"previously defined at line {first_line}."
+                    f"duplicate label '{label_name}' previously defined at line {first_line}.",
+                    line=st.line_number,
                 )
             else:
                 label_table[label_name] = LabelEntry(
