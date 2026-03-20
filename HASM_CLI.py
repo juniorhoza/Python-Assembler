@@ -174,7 +174,11 @@ def _print_trace_pass2(pass2_result) -> None:
     if pass2_result.errors:
         print("\n[TRACE] PASS2 ERRORS")
         for err in pass2_result.errors:
-            print(f"  {err}")
+            print(f"  {err.code} line={err.line}: {err.message}")
+    if pass2_result.warnings:
+        print("\n[TRACE] PASS2 WARNINGS")
+        for warning in pass2_result.warnings:
+            print(f"  {warning.code} line={warning.line}: {warning.message}")
 
 
 def main():
@@ -216,8 +220,18 @@ def main():
     # ------------------------------------------------------------------
     # Step 2: Read source file
     # ------------------------------------------------------------------
-    with open(source_file) as f:
-        source_lines = f.readlines()
+    try:
+        with open(source_file) as f:
+            source_lines = f.readlines()
+    except OSError as e:
+        error_handler.report(
+            code="E000",
+            message=f"Could not read source file '{source_file}': {e}",
+            line=1,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(3)
 
     # ------------------------------------------------------------------
     # Step 3: Lex source to tokens (labels, mnemonics, operands, comments)
@@ -229,8 +243,14 @@ def main():
             keep_comments=True,
         )
     except LexicalError as e:
-        print(color_error(str(e)), file=sys.stderr)
-        sys.exit(6)
+        error_handler.report(
+            code=e.code,
+            message=str(e),
+            line=e.line,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(6)
 
     print(f"Lexer OK: {len(lexer_tokens)} tokens generated.")
     if args.trace:
@@ -242,8 +262,14 @@ def main():
     try:
         statements = parse_tokens(lexer_tokens, total_lines=len(source_lines))
     except ParserError as e:
-        print(color_error(str(e)), file=sys.stderr)
-        sys.exit(7)
+        error_handler.report(
+            code=e.code,
+            message=str(e),
+            line=e.line,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(7)
 
     print(f"Parser OK: {len(statements)} statements generated.")
     if args.trace:
@@ -275,8 +301,14 @@ def main():
     try:
         pass1_result = run_pass1(statements)
     except Pass1Error as e:
-        print(color_error(str(e)), file=sys.stderr)
-        sys.exit(8)
+        error_handler.report(
+            code=e.code,
+            message=str(e),
+            line=e.line,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(8)
 
     print(
         "Pass1 OK: "
@@ -301,16 +333,29 @@ def main():
             source_lines=source_lines,
         )
     except Pass2Error as e:
-        print(color_error(str(e)), file=sys.stderr)
-        sys.exit(9)
+        error_handler.report(
+            code=e.code,
+            message=str(e),
+            line=e.line,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(9)
 
     for warning in pass2_result.warnings:
-        print(color_warning(f"WARNING: {warning}"))
+        warning_line = str(warning.line) if warning.line > 0 else "0"
+        print(color_warning(f"{source_file}:{warning_line}: WARNING {warning.code}: {warning.message}"))
 
     if not pass2_result.ok:
         for err in pass2_result.errors:
-            print(color_error(err), file=sys.stderr)
-        sys.exit(9)
+            error_handler.report(
+                code=err.code,
+                message=err.message,
+                line=err.line,
+                filename=source_file,
+                is_fatal=True,
+            )
+        error_handler.emit_and_exit(9)
 
     print(f"Pass2 OK: {len(pass2_result.instructions)} instructions encoded.")
     if args.trace:
@@ -319,16 +364,26 @@ def main():
     # ------------------------------------------------------------------
     # Step 8: Write output files (.hlx and .hll)
     # ------------------------------------------------------------------
-    write_hlx(hlx_file, pass1_result, pass2_result)
-    write_hll(
-        hll_path=hll_file,
-        source_file=source_file,
-        hlx_path=hlx_file,
-        pass1_result=pass1_result,
-        pass2_result=pass2_result,
-        source_lines=source_lines,
-        statements=statements,
-    )
+    try:
+        write_hlx(hlx_file, pass1_result, pass2_result)
+        write_hll(
+            hll_path=hll_file,
+            source_file=source_file,
+            hlx_path=hlx_file,
+            pass1_result=pass1_result,
+            pass2_result=pass2_result,
+            source_lines=source_lines,
+            statements=statements,
+        )
+    except OSError as e:
+        error_handler.report(
+            code="E000",
+            message=f"Could not write output files: {e}",
+            line=0,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(10)
 
     print(f"Output written: {hlx_file}")
     print(f"Output written: {hll_file}")

@@ -18,14 +18,15 @@ class Token:
 
 
 class LexicalError(Exception):
-    def __init__(self, line: int, column: int, token: str):
+    def __init__(self, line: int, column: int, token: str, code: str = "E005"):
+        self.code = code
         self.line = line
         self.column = column
         self.token = token
         super().__init__(str(self))
 
     def __str__(self) -> str:
-        return f"Lexical Error at line {self.line}, column {self.column}: invalid token '{self.token}'"
+        return f"invalid token '{self.token}' at column {self.column}"
 
 
 _DIRECTIVE_RE = re.compile(r"^\.[A-Za-z][A-Za-z0-9_]*$")
