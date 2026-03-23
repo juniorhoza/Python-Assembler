@@ -1,0 +1,8 @@
+------------------------------------------------------------
+Run: 2026-03-23 | Branch: dev | Commit: 94095de | Full Suite
+  Unit Tests (test_hlx_unit.py):           43 PASSED  |  0 FAILED  |  43 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):     23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests (test_hlx_assembler_improved): 18 PASSED  |  0 FAILED  |  10 SKIPPED  |  28 TOTAL
+  Reference Comparison (run_tests.sh):     20 PASSED  |  3 FAIL (intentional)  |  8 BLOCKED
+  Notes: 3 reference failures are intentional (.BLOCK support, duplicate .ALLOC behavior)
+         10 skipped tests pending Sprint 3 dev implementation
