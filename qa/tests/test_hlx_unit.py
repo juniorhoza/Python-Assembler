@@ -385,16 +385,16 @@ run("STR-006", ".BLOCK after .BEGIN detected as error", test_str_006)
 
 
 def test_str_007():
-    """Multiple .ALLOC produces warning W004 not error"""
+    """Multiple .ALLOC now produces fatal error E004 (updated Sprint 3)"""
     stmts = make_statements(
         "        .ALLOC 2\nx .DATA =3\n        .ALLOC 2\ny .DATA\n        .BEGIN\nHALT\n        .END"
     )
     result = check_program_structure(stmts)
-    assert result.ok, f"Expected ok=True for multiple .ALLOC (warning only), got errors: {[e.message for e in result.errors]}"
-    warn_codes = [w.code for w in result.warnings]
-    assert "W004" in warn_codes, f"Expected warning W004, got {warn_codes}"
+    assert not result.ok, f"Expected ok=False for multiple .ALLOC (fatal error), got ok=True"
+    error_codes = [e.code for e in result.errors]
+    assert "E004" in error_codes, f"Expected error E004 for duplicate .ALLOC, got {error_codes}"
 
-run("STR-007", "Multiple .ALLOC produces W004 warning not error", test_str_007)
+run("STR-007", "Multiple .ALLOC produces fatal error E004 (updated Sprint 3)", test_str_007)
 
 
 def test_str_008():
