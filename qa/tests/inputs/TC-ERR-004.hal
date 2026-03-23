@@ -1,0 +1,8 @@
+# TC-ERR-004: Fatal error halts assembly
+# FR-ERR-004: Fatal error produces no output files
+# Expected: Assembly halts, no .hlx or .hll produced
+        .ALLOC 2
+x .DATA =1
+        .BEGIN
+LOAD    x
+HALT

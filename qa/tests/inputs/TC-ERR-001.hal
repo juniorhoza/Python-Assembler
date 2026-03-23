@@ -1,0 +1,11 @@
+# TC-ERR-001: Error message includes filename and line number
+# FR-ERR-001: Errors reported to stderr with filename and line number
+# Expected: Error output contains filename and "line 7"
+        .ALLOC 2
+x .DATA =1
+y .DATA =2
+.BADDIR
+        .BEGIN
+LOAD    x
+HALT
+        .END
