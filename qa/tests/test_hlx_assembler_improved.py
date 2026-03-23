@@ -309,9 +309,10 @@ run("TC-SYM-001", "Symbol table — 4 labels with correct addresses",
         ])),
     ])
 
-run("TC-SYM-002", "Duplicate label LOOP — detected, no .hlx produced",
+run("TC-SYM-002", "Duplicate label LOOP — error E007 with line number, no .hlx produced",
     "TC-SYM-002.hal", [
-        ("Duplicate label reported", lambda c,o,f: "duplicate" in o.lower() and "loop" in o.lower()),
+        ("Error E007 reported", lambda c,o,f: "e007" in o.lower()),
+        ("Duplicate label LOOP mentioned", lambda c,o,f: "duplicate" in o.lower() and "loop" in o.lower()),
         ("No .hlx produced", expect_no_hlx),
     ])
 

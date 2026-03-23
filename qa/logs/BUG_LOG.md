@@ -128,23 +128,21 @@ Assembly halts after Pass1, no `.hlx` produced. ✅
 | **Bug ID** | DISC-004 |
 | **TC ID** | TC-SYM-002 |
 | **Severity** | Low |
-| **Status** | Open — Awaiting Dev Response |
+| **Status** | ✅ Resolved — Fixed in Sprint 3 |
 | **Branch** | dev |
-| **Commit** | 8edb8cc |
-| **Date** | 2026-03-23 |
+| **Commit Found** | 8edb8cc |
+| **Commit Fixed** | latest dev |
+| **Date Found** | 2026-03-23 |
+| **Date Fixed** | 2026-03-23 |
 | **Tester** | Ruxandra Flueras |
 
-**Observed Behavior:**
-When a duplicate label is detected, the message is:
+**Original Observation:**
+Message had no ERROR prefix and no error code:
 `Line 9: duplicate label 'LOOP' previously defined at line 6.`
-No `ERROR` prefix and no error code.
 
-**Compare with TC-SYM-003 which correctly shows:**
-`ERROR E021 Line 7: undefined label 'MISSING'`
+**Fix Applied:**
+Dev team assigned error code E007. Now correctly reports:
+`ERROR E007: duplicate label 'LOOP' previously defined at line 6.`
 
-**SRS Says:** FR-ERR-002 — Error messages should have unique error codes.
-
-**Question for Devs:**
-> The duplicate label message has no ERROR prefix and no error code, unlike other error messages. Should it follow the same format as E021? What error code should be assigned to duplicate label detection?
-
-**Fix Notes:** *(dev team fills this in)*
+**Verified:**
+TC-SYM-002 test updated to check for E007. 18/18 tests passing. ✅
