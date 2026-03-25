@@ -20,6 +20,8 @@ from typing import Optional
 
 from services.parser import Statement
 
+HALIX_MEMORY_LIMIT = 100
+
 
 # -----------------------------------------------------------------------
 # Data structures (per SDD Section 3.3)
@@ -116,6 +118,12 @@ def _build_data_table(
         if st.mnemonic == ".ALLOC":
             if st.operands and st.operands[0].isdigit():
                 d_size = int(st.operands[0])
+                if d_size > HALIX_MEMORY_LIMIT:
+                    raise Pass1Error(
+                        f".ALLOC value {d_size} exceeds Halix data memory limit 99.",
+                        line=st.line_number,
+                        code="E032",
+                    )
             continue
 
         # ── .DATA ──────────────────────────────────────────────────────
@@ -132,6 +140,13 @@ def _build_data_table(
                 raise Pass1Error(
                     f"duplicate variable '{var_name}' previously defined earlier in the data section.",
                     line=st.line_number,
+                )
+
+            if d_addr >= HALIX_MEMORY_LIMIT:
+                raise Pass1Error(
+                    "data memory limit exceeded. Halix data addresses range from 00 to 99.",
+                    line=st.line_number,
+                    code="E032",
                 )
 
             # Extract initial value: .DATA X = 5  or  .DATA X =5  or  .DATA X
@@ -174,6 +189,13 @@ def _build_data_table(
                 raise Pass1Error(
                     f"duplicate block '{block_name}' previously defined earlier in the data section.",
                     line=st.line_number,
+                )
+
+            if d_addr + block_size > HALIX_MEMORY_LIMIT:
+                raise Pass1Error(
+                    f".BLOCK '{block_name}' with size {block_size} exceeds Halix data memory limit 99.",
+                    line=st.line_number,
+                    code="E032",
                 )
 
             # Parse optional initializer values
@@ -264,6 +286,13 @@ def _build_label_table(
             continue
 
         # Record label if present — label gets current address
+        if i_addr >= HALIX_MEMORY_LIMIT:
+            raise Pass1Error(
+                "instruction memory limit exceeded. Halix instruction addresses range from 00 to 99.",
+                line=st.line_number,
+                code="E031",
+            )
+
         if st.label is not None:
             label_name = st.label.upper()
             if label_name in label_table:
