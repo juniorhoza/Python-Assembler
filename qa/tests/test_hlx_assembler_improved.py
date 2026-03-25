@@ -351,22 +351,113 @@ run("TC-SYM-006", "Location counter — 5 instructions at sequential addresses",
 
 # ── TC-GEN and TC-ERR: Pending Sprint 3 ──────────────────────────────────────
 print("\n------------------------------------------------------------")
-print(" TC-GEN: Code Generation & Output  [PENDING SPRINT 3]")
+print(" TC-GEN: Code Generation & Output")
 print("------------------------------------------------------------")
-skip("TC-GEN-001", "Correct machine code generated", "Pending Sprint 3 dev implementation")
-skip("TC-GEN-002", "Instructions before data in .hlx", "Pending Sprint 3 dev implementation")
-skip("TC-GEN-003", ".hlx output file produced", "Pending Sprint 3 dev implementation")
-skip("TC-GEN-004", ".hll listing file produced", "Pending Sprint 3 dev implementation")
-skip("TC-GEN-005", "Forward reference resolves correctly", "Pending Sprint 3 dev implementation")
+
+run("TC-GEN-001", "Correct machine code generated for each instruction",
+    "TC-GEN-001.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "06",
+            "0100","0300","0701","0402","0202","9900",
+            "03",
+            "0003","0004","0000"
+        ])),
+    ])
+
+run("TC-GEN-002", "Instructions before data in .hlx output",
+    "TC-GEN-002.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hlx produced", expect_hlx_produced),
+        (".hlx has instructions before data", expect_hlx([
+            "03",
+            "0300","0401","9900",
+            "02",
+            "0005","0000"
+        ])),
+    ])
+
+run("TC-GEN-003", ".hlx output file produced with correct name",
+    "TC-GEN-003.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hlx file produced", expect_hlx_produced),
+        (".hlx matches expected output", expect_hlx([
+            "02",
+            "0200","9900",
+            "01",
+            "0007"
+        ])),
+    ])
+
+run("TC-GEN-004", ".hll listing file produced",
+    "TC-GEN-004.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        (".hll file produced", lambda c,o,f: os.path.isfile(f.replace(".hal",".hll"))),
+        ("Output written message for .hll", lambda c,o,f: ".hll" in o.lower()),
+    ])
+
+run("TC-GEN-005", "Forward reference DONE resolves to correct address",
+    "TC-GEN-005.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "08",
+            "0300","2301","1106","1600","0400","1000","0200","9900",
+            "02",
+            "0001","0010"
+        ])),
+    ])
 
 print("\n------------------------------------------------------------")
-print(" TC-ERR: Error Handling  [PENDING SPRINT 3]")
+print(" TC-ERR: Error Handling")
 print("------------------------------------------------------------")
-skip("TC-ERR-001", "Error includes filename and line number", "Pending Sprint 3 dev implementation")
-skip("TC-ERR-002", "Error has unique error code", "Pending Sprint 3 dev implementation")
-skip("TC-ERR-003", "Multiple non-fatal errors reported in one run", "Pending Sprint 3 dev implementation")
-skip("TC-ERR-004", "Fatal error halts assembly, no output", "Pending Sprint 3 dev implementation")
-skip("TC-ERR-005", "Exit code 0 on success, non-zero on error", "Pending Sprint 3 dev implementation")
+
+run("TC-ERR-001", "Error output includes filename and line number",
+    "TC-ERR-001.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Filename in error output", lambda c,o,f: "tc-err-001.hal" in o.lower()),
+        ("Line number in error output", lambda c,o,f: ":7:" in o),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-ERR-002", "Error has unique error code",
+    "TC-ERR-002.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error code present (E format)", lambda c,o,f: any(f"e{str(i).zfill(3)}" in o.lower() for i in range(1,100))),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-ERR-003", "Multiple non-fatal errors all reported in one run",
+    "TC-ERR-003.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("First error reported", lambda c,o,f: "undefined_var1" in o.lower()),
+        ("Second error reported", lambda c,o,f: "undefined_var2" in o.lower()),
+        ("Both errors in same run", lambda c,o,f: o.lower().count("e030") >= 2),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-ERR-004", "Fatal error halts assembly — no output files produced",
+    "TC-ERR-004.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Fatal error reported", lambda c,o,f: "e003" in o.lower()),
+        ("No .hlx produced", expect_no_hlx),
+        ("No .hll produced", lambda c,o,f: not os.path.isfile(f.replace(".hal",".hll"))),
+    ])
+
+run("TC-ERR-005", "Exit code 0 on success, non-zero on error",
+    "TC-ERR-005.hal", [
+        ("Exits with code 0 for valid file", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx produced for valid file", expect_hlx_produced),
+        (".hlx matches expected output", expect_hlx([
+            "02",
+            "0200","9900",
+            "01",
+            "0005"
+        ])),
+    ])
+
 
 
 # ── Summary ───────────────────────────────────────────────────────────────────
