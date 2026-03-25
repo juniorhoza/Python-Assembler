@@ -1,25 +1,8 @@
 ------------------------------------------------------------
-Run: 2026-03-18 13:45:41 | Branch: dev | Commit: 9b18429
-PASS: 0 | FAIL: 0 | BLOCKED: 30 | NOT TESTED: 0 | RATE: 0%
-------------------------------------------------------------
-Run: 2026-03-18 13:46:56 | Branch: dev | Commit: 9b18429
-PASS: 4 | FAIL: 12 | BLOCKED: 14 | NOT TESTED: 0 | RATE: %
-Failed: TC-PAR-001 TC-PAR-002 TC-PAR-003 TC-DIR-001a TC-DIR-001c TC-DIR-002 TC-DIR-003a TC-DIR-003c TC-DIR-006 TC-SYM-001 TC-SYM-002 TC-SYM-003
-------------------------------------------------------------
-Run: 2026-03-18 15:25:24 | Branch: dev | Commit: 9b18429
-PASS: 3 | FAIL: 13 | BLOCKED: 14 | NOT TESTED: 0
-Failed: TC-PAR-001 TC-PAR-002 TC-PAR-003 TC-PAR-005 TC-DIR-001a TC-DIR-001c TC-DIR-002 TC-DIR-003a TC-DIR-003c TC-DIR-006 TC-SYM-001 TC-SYM-002 TC-SYM-003
-------------------------------------------------------------
-Run: 2026-03-19 00:48:16 | Branch: dev | Commit: 8edb8cc
-PASS: 15 | FAIL: 3 | BLOCKED: 13 | NOT TESTED: 0
-Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006
-------------------------------------------------------------
-Run: 2026-03-23 13:58:31 | Branch: dev | Commit: 94095de
-PASS: 20 | FAIL: 3 | BLOCKED: 8 | NOT TESTED: 0
-Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 (intentional — .BLOCK and duplicate .ALLOC differences from reference)
-------------------------------------------------------------
-Run: 2026-03-23 FULL SUITE | Branch: dev | Commit: 94095de
-  Unit Tests (test_hlx_unit.py):            43 PASSED  |  0 FAILED  |  43 TOTAL
-  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
-  SRS Tests  (test_hlx_assembler_improved): 18 PASSED  |  0 FAILED  |  10 SKIPPED  |  28 TOTAL
-  Reference  (run_tests.sh):                20 PASSED  |  3 FAIL (intentional)  |  8 BLOCKED
+Run: 2026-03-23 | Branch: dev | Commit: 94095de | Full Suite
+  Unit Tests (test_hlx_unit.py):           43 PASSED  |  0 FAILED  |  43 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):     23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests (test_hlx_assembler_improved): 18 PASSED  |  0 FAILED  |  10 SKIPPED  |  28 TOTAL
+  Reference Comparison (run_tests.sh):     20 PASSED  |  3 FAIL (intentional)  |  8 BLOCKED
+  Notes: 3 reference failures are intentional (.BLOCK support, duplicate .ALLOC behavior)
+         10 skipped tests pending Sprint 3 dev implementation
