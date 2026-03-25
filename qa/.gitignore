@@ -1,0 +1,8 @@
+# Generated output files
+tests/inputs/*.hlx
+tests/inputs/*.hll
+tests/outputs/
+# Individual run logs (kept in SUMMARY.log instead)
+logs/run_*.log
+# Old intermediate scripts
+tests/test_hlx_assembler_skips.py

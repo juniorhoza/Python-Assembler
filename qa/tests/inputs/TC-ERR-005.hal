@@ -1,0 +1,9 @@
+# TC-ERR-005: Exit code validation
+# FR-ERR-005: Non-zero exit code on error, zero on success
+# Expected: This valid file exits with code 0
+        .ALLOC 1
+x .DATA =5
+        .BEGIN
+WRITE   x
+HALT
+        .END
