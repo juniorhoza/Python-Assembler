@@ -22,7 +22,7 @@ SCRUM-23: FR-GEN-001, FR-GEN-005
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement
+from services.parser import Statement, parse_indexed_symbol
 from services.pass1 import Pass1Result, DataEntry, LabelEntry
 from services.HASM_opcode_Loader import OpcodeTable, OPERAND_NONE, OPERAND_BRANCH, OPERAND_IMMEDIATE, OPERAND_DATA
 
@@ -72,6 +72,44 @@ class Pass2Issue:
 
 def _zero_pad(n: int) -> str:
     return str(n).zfill(2)
+
+
+def _resolve_data_operand(
+    operand: str,
+    data_table: dict[str, DataEntry],
+) -> tuple[str | None, Pass2Issue | None]:
+    indexed = parse_indexed_symbol(operand)
+    if indexed is None:
+        data_entry = data_table.get(operand.upper())
+        if data_entry is None:
+            return None, Pass2Issue(
+                code="E030",
+                line=0,
+                message=f"undefined variable '{operand.upper()}' - addr 99 used.",
+            )
+        return data_entry.address, None
+
+    base_name, element_index = indexed
+    data_entry = data_table.get(base_name)
+    if data_entry is None:
+        return None, Pass2Issue(
+            code="E030",
+            line=0,
+            message=f"undefined variable '{base_name}' - addr 99 used.",
+        )
+    if data_entry.size <= 1:
+        return None, Pass2Issue(
+            code="E030",
+            line=0,
+            message=f"indexed operand '{operand.upper()}' refers to non-block symbol '{base_name}' - addr 99 used.",
+        )
+    if element_index >= data_entry.size:
+        return None, Pass2Issue(
+            code="E030",
+            line=0,
+            message=f"indexed operand '{operand.upper()}' exceeds block '{base_name}' size {data_entry.size} - addr 99 used.",
+        )
+    return _zero_pad(int(data_entry.address) + element_index), None
 
 
 # -----------------------------------------------------------------------
@@ -248,19 +286,13 @@ def run_pass2(
                 )
                 machine_word = opcode + "99"
             else:
-                var_name = operands[0].upper()
-                data_entry = data_table.get(var_name)
-                if data_entry is None:
-                    result.errors.append(
-                        Pass2Issue(
-                            code="E030",
-                            line=st.line_number,
-                            message=f"undefined variable '{var_name}' - addr 99 used.",
-                        )
-                    )
+                resolved_addr, issue = _resolve_data_operand(operands[0], data_table)
+                if issue is not None:
+                    issue.line = st.line_number
+                    result.errors.append(issue)
                     machine_word = opcode + "99"
                 else:
-                    machine_word = opcode + data_entry.address
+                    machine_word = opcode + resolved_addr
 
         result.instructions.append(EncodedInstruction(
             line_number=st.line_number,

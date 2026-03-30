@@ -6,11 +6,11 @@ import os
 
 from services.HASM_opcode_Loader import load_opcode_table
 from services.errors import ErrorHandler, color_error, color_warning
-from services.lexer import tokenize_source, LexicalError
-from services.pass1 import run_pass1, Pass1Error
-from services.parser import parse_tokens, check_program_structure, ParserError
+from services.lexer import tokenize_source_collect
+from services.pass1 import run_pass1
+from services.parser import parse_tokens_collect, check_program_structure
 from services.pass2 import run_pass2, Pass2Error
-from services.output import write_hlx, write_hll
+from services.output import write_hlx, write_hll, write_sym
 
 BANNER = r"""
 
@@ -60,6 +60,9 @@ def build_parser() -> argparse.ArgumentParser:
             "Output files are derived from the source filename:\n"
             "  source.hal  ->  source.hlx  (machine code)\n"
             "                  source.hll  (assembler listing)\n"
+            "\n"
+            "Custom output basename:\n"
+            "  hasm source.hal -o build/out  ->  build/out.hlx, build/out.hll\n"
         ),
         add_help=True,
     )
@@ -76,6 +79,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--trace",
         action="store_true",
         help="Print lexer tokens and parser statements for debugging.",
+    )
+    parser.add_argument(
+        "--cols",
+        help="Column widths for .hll source formatting as LABEL,MNEMONIC (example: --cols 8,10).",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help="Custom output basename. Generates <output>.hlx and <output>.hll.",
+    )
+    parser.add_argument(
+        "-s",
+        action="store_true",
+        help="Write DataTable and LabelTable dump to a .sym file.",
     )
     return parser
 
@@ -102,9 +119,106 @@ def validate_args(source_file: str, error_handler: ErrorHandler) -> str:
     return source_file
 
 
-def derive_output_paths(source_file: str) -> tuple[str, str]:
-    base = source_file[:-4]
-    return base + ".hlx", base + ".hll"
+def derive_output_paths(source_file: str, output_base: str | None = None) -> tuple[str, str, str]:
+    base = output_base if output_base is not None else source_file[:-4]
+    if base.endswith(".hlx") or base.endswith(".hll"):
+        base = os.path.splitext(base)[0]
+    return base + ".hlx", base + ".hll", base + ".sym"
+
+
+def _parse_cols_value(raw_value: str) -> tuple[int, int]:
+    parts = [part.strip() for part in raw_value.split(",")]
+    if len(parts) != 2 or not all(part.isdigit() for part in parts):
+        raise ValueError("expected format LABEL,MNEMONIC with numeric values")
+    return int(parts[0]), int(parts[1])
+
+
+def _resolve_hconfig_path(source_file: str) -> str | None:
+    source_dir = os.path.dirname(os.path.abspath(source_file))
+    source_config = os.path.join(source_dir, ".hconfig")
+    if os.path.isfile(source_config):
+        return source_config
+
+    cwd_config = os.path.join(os.getcwd(), ".hconfig")
+    if os.path.isfile(cwd_config):
+        return cwd_config
+    return None
+
+
+def resolve_listing_columns(args, error_handler: ErrorHandler, source_file: str) -> tuple[int, int] | None:
+    default_label_width = 8
+    default_mnemonic_width = 8
+
+    raw_value: str | None = None
+    config_path = None
+
+    if args.cols is not None:
+        raw_value = args.cols
+    else:
+        config_path = _resolve_hconfig_path(source_file)
+        if config_path is not None:
+            try:
+                with open(config_path, "r", encoding="utf-8") as config_file:
+                    raw_value = config_file.readline().strip()
+            except OSError as e:
+                error_handler.report(
+                    code="E000",
+                    message=f"Could not read configuration file '{config_path}': {e}",
+                    line=0,
+                    filename=source_file,
+                    is_fatal=True,
+                )
+                error_handler.emit_and_exit(2)
+
+    if raw_value is None or raw_value == "":
+        return None
+
+    if raw_value.startswith("[") and raw_value.endswith("]"):
+        raw_value = raw_value[1:-1].strip()
+
+    try:
+        label_width, mnemonic_width = _parse_cols_value(raw_value)
+    except ValueError as e:
+        source_hint = "--cols" if args.cols is not None else config_path or ".hconfig"
+        error_handler.report(
+            code="E009",
+            message=f"Invalid column configuration in {source_hint}: {e}.",
+            line=0,
+            filename=source_file,
+            is_fatal=True,
+        )
+        error_handler.emit_and_exit(2)
+
+    for field_name, width in (("label", label_width), ("mnemonic", mnemonic_width)):
+        if width > 10:
+            error_handler.report(
+                code="E009",
+                message=f"{field_name} column width {width} exceeds maximum allowed value 10.",
+                line=0,
+                filename=source_file,
+                is_fatal=True,
+            )
+            error_handler.emit_and_exit(2)
+
+    if label_width < default_label_width:
+        print(
+            color_warning(
+                f"{source_file}:0: WARNING W006: label column width {label_width} is below default "
+                f"{default_label_width}; using {default_label_width}."
+            )
+        )
+        label_width = default_label_width
+
+    if mnemonic_width < default_mnemonic_width:
+        print(
+            color_warning(
+                f"{source_file}:0: WARNING W007: mnemonic column width {mnemonic_width} is below default "
+                f"{default_mnemonic_width}; using {default_mnemonic_width}."
+            )
+        )
+        mnemonic_width = default_mnemonic_width
+
+    return label_width, mnemonic_width
 
 
 def _print_trace_tokens(tokens) -> None:
@@ -194,12 +308,15 @@ def main():
     error_handler = ErrorHandler(default_filename=args.source_file)
 
     source_file = validate_args(args.source_file, error_handler)
-    hlx_file, hll_file = derive_output_paths(source_file)
+    source_columns = resolve_listing_columns(args, error_handler, source_file)
+    hlx_file, hll_file, sym_file = derive_output_paths(source_file, args.output)
 
     print("****  HASM EXECUTION STARTING ...")
     print(f"  Source:  {source_file}")
     print(f"  Output:  {hlx_file}  (machine code)")
     print(f"           {hll_file}  (listing)")
+    if args.s:
+        print(f"           {sym_file}  (symbol dump)")
     print()
 
     # ------------------------------------------------------------------
@@ -236,20 +353,20 @@ def main():
     # ------------------------------------------------------------------
     # Step 3: Lex source to tokens (labels, mnemonics, operands, comments)
     # ------------------------------------------------------------------
-    try:
-        lexer_tokens = tokenize_source(
-            source_lines=source_lines,
-            opcode_mnemonics=set(opcode_table.by_mnemonic.keys()),
-            keep_comments=True,
-        )
-    except LexicalError as e:
+    lexer_tokens, lexical_errors = tokenize_source_collect(
+        source_lines=source_lines,
+        opcode_mnemonics=set(opcode_table.by_mnemonic.keys()),
+        keep_comments=True,
+    )
+    for err in lexical_errors:
         error_handler.report(
-            code=e.code,
-            message=str(e),
-            line=e.line,
+            code=err.code,
+            message=str(err),
+            line=err.line,
             filename=source_file,
             is_fatal=True,
         )
+    if lexical_errors:
         error_handler.emit_and_exit(6)
 
     print(f"Lexer OK: {len(lexer_tokens)} tokens generated.")
@@ -259,17 +376,15 @@ def main():
     # ------------------------------------------------------------------
     # Step 4: Parse token stream into statements
     # ------------------------------------------------------------------
-    try:
-        statements = parse_tokens(lexer_tokens, total_lines=len(source_lines))
-    except ParserError as e:
+    statements, parser_errors = parse_tokens_collect(lexer_tokens, total_lines=len(source_lines))
+    for err in parser_errors:
         error_handler.report(
-            code=e.code,
-            message=str(e),
-            line=e.line,
+            code=err.code,
+            message=str(err),
+            line=err.line,
             filename=source_file,
             is_fatal=True,
         )
-        error_handler.emit_and_exit(7)
 
     print(f"Parser OK: {len(statements)} statements generated.")
     if args.trace:
@@ -282,7 +397,7 @@ def main():
     for warning in structure_result.warnings:
         print(color_warning(f"WARNING {warning.code}: {warning.message}"))
 
-    if not structure_result.ok:
+    if parser_errors or not structure_result.ok:
         for issue in structure_result.errors:
             error_handler.report(
                 code=issue.code,
@@ -291,23 +406,24 @@ def main():
                 filename=source_file,
                 is_fatal=issue.is_fatal,
             )
-        error_handler.emit_and_exit(5)
+        exit_code = 7 if parser_errors else 5
+        error_handler.emit_and_exit(exit_code)
 
     print(f"Program structure OK [{source_file}].")
 
     # ------------------------------------------------------------------
     # Step 6: Pass 1 — build data/label tables and track location counters
     # ------------------------------------------------------------------
-    try:
-        pass1_result = run_pass1(statements)
-    except Pass1Error as e:
-        error_handler.report(
-            code=e.code,
-            message=str(e),
-            line=e.line,
-            filename=source_file,
-            is_fatal=True,
-        )
+    pass1_result = run_pass1(statements)
+    if pass1_result.errors:
+        for err in pass1_result.errors:
+            error_handler.report(
+                code=err.code,
+                message=str(err),
+                line=err.line,
+                filename=source_file,
+                is_fatal=True,
+            )
         error_handler.emit_and_exit(8)
 
     print(
@@ -374,7 +490,10 @@ def main():
             pass2_result=pass2_result,
             source_lines=source_lines,
             statements=statements,
+            source_columns=source_columns,
         )
+        if args.s:
+            write_sym(sym_file, pass1_result)
     except OSError as e:
         error_handler.report(
             code="E000",
@@ -387,6 +506,8 @@ def main():
 
     print(f"Output written: {hlx_file}")
     print(f"Output written: {hll_file}")
+    if args.s:
+        print(f"Output written: {sym_file}")
     print("Assembler execution OK.")
 
 
