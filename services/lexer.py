@@ -34,10 +34,11 @@ _LABEL_DEF_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*:$")
 _IMMEDIATE_RE = re.compile(r"^=\S+$")
 _NUMBER_RE = re.compile(r"^\d+$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_INDEXED_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[\d+\]$")
 
 
 def _invalid_char(raw: str) -> Optional[str]:
-    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:.=,")
+    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:.=,[]")
     for ch in raw:
         if ch not in allowed:
             return ch
@@ -127,6 +128,8 @@ def tokenize_line(
                 token = Token("IMMEDIATE", part_raw, line_number, part_col)
             elif _NUMBER_RE.match(part_raw):
                 token = Token("NUMBER", part_raw, line_number, part_col)
+            elif _INDEXED_IDENT_RE.match(part_raw):
+                token = Token("OPERAND", part_raw.upper(), line_number, part_col)
             elif _IDENT_RE.match(part_raw):
                 token_type = _classify_identifier(part_raw, split_index, prev_type, opcode_mnemonics)
                 token = Token(token_type, part_raw.upper(), line_number, part_col)
@@ -147,20 +150,39 @@ def tokenize_source(
     opcode_mnemonics: Optional[set[str]] = None,
     keep_comments: bool = True,
 ) -> list[Token]:
+    tokens, errors = tokenize_source_collect(
+        source_lines=source_lines,
+        opcode_mnemonics=opcode_mnemonics,
+        keep_comments=keep_comments,
+    )
+    if errors:
+        raise errors[0]
+    return tokens
+
+
+def tokenize_source_collect(
+    source_lines: Iterable[str],
+    opcode_mnemonics: Optional[set[str]] = None,
+    keep_comments: bool = True,
+) -> tuple[list[Token], list[LexicalError]]:
     if opcode_mnemonics is None:
         opcode_mnemonics = set()
 
     all_tokens: list[Token] = []
+    errors: list[LexicalError] = []
     for line_number, line in enumerate(source_lines, start=1):
-        all_tokens.extend(
-            tokenize_line(
-                line=line,
-                line_number=line_number,
-                opcode_mnemonics=opcode_mnemonics,
-                keep_comments=keep_comments,
+        try:
+            all_tokens.extend(
+                tokenize_line(
+                    line=line,
+                    line_number=line_number,
+                    opcode_mnemonics=opcode_mnemonics,
+                    keep_comments=keep_comments,
+                )
             )
-        )
-    return all_tokens
+        except LexicalError as exc:
+            errors.append(exc)
+    return all_tokens, errors
 
 
 def tokenize_file(

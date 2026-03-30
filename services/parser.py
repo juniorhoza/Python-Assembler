@@ -35,6 +35,7 @@ class ParserError(Exception):
 
 
 _IDENT_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+_INDEXED_IDENT_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)\[(\d+)\]$")
 _DIRECTIVES = {".ALLOC", ".DATA", ".BLOCK", ".BEGIN", ".END"}
 
 # ISA operand groups from design document section 3.4.1
@@ -86,6 +87,24 @@ def _validate_symbol_name(tok: Token, what: str) -> None:
         raise ParserError(tok.line_number, f"{what} '{tok.value}' cannot be a directive name", tok.column)
 
 
+def parse_indexed_symbol(value: str) -> tuple[str, int] | None:
+    match = _INDEXED_IDENT_RE.match(value.upper())
+    if match is None:
+        return None
+    return match.group(1), int(match.group(2))
+
+
+def _validate_data_target(tok: Token, what: str) -> None:
+    indexed = parse_indexed_symbol(tok.value)
+    if indexed is not None:
+        base_name = indexed[0]
+        _validate_identifier(Token(tok.token_type, base_name, tok.line_number, tok.column), what)
+        if base_name in NO_OPERAND_MNEMONICS or base_name in BRANCH_MNEMONICS or base_name in IMMEDIATE_MNEMONICS:
+            raise ParserError(tok.line_number, f"{what} '{tok.value}' cannot be an instruction name", tok.column)
+        return
+    _validate_symbol_name(tok, what)
+
+
 def _normalize_operands(tokens: list[Token]) -> list[str]:
     return [tok.value for tok in tokens]
 
@@ -115,7 +134,7 @@ def _parse_directive_statement(line_number: int, label: str | None, tokens: list
     if mnemonic == ".DATA":
         if len(operands) < 1:
             raise ParserError(line_number, ".DATA requires at least a variable name", mnemonic_tok.column)
-        _validate_symbol_name(operands[0], "variable name")
+        _validate_data_target(operands[0], "variable name")
         # Accepted forms:
         #   .DATA X
         #   .DATA X = 5
@@ -134,17 +153,24 @@ def _parse_directive_statement(line_number: int, label: str | None, tokens: list
             )
 
     if mnemonic == ".BLOCK":
-        # Array-style declaration: .BLOCK <name> <size>
         if len(operands) < 2:
             col = operands[0].column if operands else mnemonic_tok.column
-            raise ParserError(line_number, ".BLOCK expected '.BLOCK <name> <size> [= v1,v2,...]'", col)
+            raise ParserError(line_number, ".BLOCK expected '.BLOCK <name> <size>' or '.BLOCK <name> =v1,=v2,...'", col)
         _validate_symbol_name(operands[0], "block name")
-        if not operands[1].value.isdigit():
-            raise ParserError(line_number, ".BLOCK size must be numeric", operands[1].column)
-        if int(operands[1].value) <= 0:
-            raise ParserError(line_number, ".BLOCK size must be greater than zero", operands[1].column)
-        if len(operands) > 2:
-            _validate_block_initializer(line_number, operands[2:], int(operands[1].value))
+
+        # Empty block form: .BLOCK <name> <size>
+        if operands[1].value.isdigit():
+            if int(operands[1].value) <= 0:
+                raise ParserError(line_number, ".BLOCK size must be greater than zero", operands[1].column)
+            if len(operands) > 2:
+                raise ParserError(
+                    line_number,
+                    ".BLOCK with explicit values must use '.BLOCK <name> =v1,=v2,...'",
+                    operands[2].column,
+                )
+        else:
+            # Initialized form: .BLOCK <name> =v1,=v2,...
+            _validate_block_initializer(line_number, operands[1:])
 
     return Statement(
         line_number=line_number,
@@ -178,60 +204,51 @@ def _parse_instruction_statement(line_number: int, label: str | None, tokens: li
     )
 
 
-def _validate_block_initializer(line_number: int, init_tokens: list[Token], block_size: int) -> None:
+def _validate_block_initializer(line_number: int, init_tokens: list[Token]) -> None:
     """
     Accept:
-      = 1,2,3
-      =1,2,3
+      =6,=5,=4
     """
-    values: list[str] = []
-    idx = 0
+    if not init_tokens:
+        raise ParserError(line_number, ".BLOCK initializer requires at least one value")
 
+    values: list[str] = []
     expect_value = True
 
-    if init_tokens[0].token_type == "ASSIGN":
-        idx = 1
-    elif init_tokens[0].token_type == "IMMEDIATE":
-        first = init_tokens[0].value
-        if len(first) == 1:
-            raise ParserError(line_number, ".BLOCK initializer missing first value after '='", init_tokens[0].column)
-        values.append(first[1:])
-        idx = 1
-        expect_value = False
-    else:
-        raise ParserError(line_number, ".BLOCK initializer must start with '='", init_tokens[0].column)
-    while idx < len(init_tokens):
-        tok = init_tokens[idx]
+    for idx, tok in enumerate(init_tokens):
         if expect_value:
-            if tok.token_type == "NUMBER":
-                values.append(tok.value)
-                expect_value = False
-            elif tok.token_type == "IMMEDIATE":
-                # allow '=7' in list positions for leniency
-                if len(tok.value) == 1 or not tok.value[1:].isdigit():
-                    raise ParserError(line_number, ".BLOCK initializer values must be numeric", tok.column)
-                values.append(tok.value[1:])
-                expect_value = False
-            else:
+            if tok.token_type != "IMMEDIATE":
+                raise ParserError(line_number, ".BLOCK initializer values must be in '=N' form", tok.column)
+            if len(tok.value) == 1 or not tok.value[1:].isdigit():
                 raise ParserError(line_number, ".BLOCK initializer values must be numeric", tok.column)
-        else:
-            if tok.token_type != "COMMA":
-                raise ParserError(line_number, "Expected ',' between .BLOCK initializer values", tok.column)
-            expect_value = True
-        idx += 1
+            values.append(tok.value[1:])
+            expect_value = False
+            continue
+
+        if tok.token_type != "COMMA":
+            raise ParserError(line_number, "Expected ',' between .BLOCK initializer values", tok.column)
+        if idx == len(init_tokens) - 1:
+            raise ParserError(line_number, ".BLOCK initializer cannot end with ','", tok.column)
+        expect_value = True
 
     if expect_value:
         raise ParserError(line_number, ".BLOCK initializer cannot end with ','", init_tokens[-1].column)
 
-    if len(values) > block_size:
-        raise ParserError(
-            line_number,
-            f".BLOCK initializer has {len(values)} values but block size is {block_size}",
-            init_tokens[0].column,
-        )
+    if not values:
+        raise ParserError(line_number, ".BLOCK initializer requires at least one value", init_tokens[0].column)
 
 
 def parse_tokens(tokens: list[Token], total_lines: int | None = None) -> list[Statement]:
+    statements, errors = parse_tokens_collect(tokens, total_lines=total_lines)
+    if errors:
+        raise errors[0]
+    return statements
+
+
+def parse_tokens_collect(
+    tokens: list[Token],
+    total_lines: int | None = None,
+) -> tuple[list[Statement], list[ParserError]]:
     by_line: dict[int, list[Token]] = defaultdict(list)
     max_line = 0
     for tok in tokens:
@@ -243,6 +260,7 @@ def parse_tokens(tokens: list[Token], total_lines: int | None = None) -> list[St
         total_lines = max_line
 
     statements: list[Statement] = []
+    errors: list[ParserError] = []
 
     for line_number in range(1, total_lines + 1):
         line_tokens = by_line.get(line_number, [])
@@ -267,22 +285,26 @@ def parse_tokens(tokens: list[Token], total_lines: int | None = None) -> list[St
         body = code_tokens[idx:]
         head = body[0]
 
-        # Legacy compatibility: allow "name .DATA ..." and "name .BLOCK ..."
-        # in addition to ".DATA name ..." / ".BLOCK name ..."
-        if (
-            len(body) >= 2
-            and body[0].token_type in {"OPERAND", "MNEMONIC"}
-            and body[1].token_type == "DIRECTIVE"
-            and body[1].value in {".DATA", ".BLOCK"}
-        ):
-            reordered = [body[1], body[0], *body[2:]]
-            statements.append(_parse_directive_statement(line_number, label, reordered))
-        elif head.token_type == "DIRECTIVE":
-            statements.append(_parse_directive_statement(line_number, label, body))
-        else:
-            statements.append(_parse_instruction_statement(line_number, label, body))
+        try:
+            # Legacy compatibility: allow "name .DATA ..." and "name .BLOCK ..."
+            # in addition to ".DATA name ..." / ".BLOCK name ..."
+            if (
+                len(body) >= 2
+                and body[0].token_type in {"OPERAND", "MNEMONIC"}
+                and body[1].token_type == "DIRECTIVE"
+                and body[1].value in {".DATA", ".BLOCK"}
+            ):
+                reordered = [body[1], body[0], *body[2:]]
+                statements.append(_parse_directive_statement(line_number, label, reordered))
+            elif head.token_type == "DIRECTIVE":
+                statements.append(_parse_directive_statement(line_number, label, body))
+            else:
+                statements.append(_parse_instruction_statement(line_number, label, body))
+        except ParserError as exc:
+            errors.append(exc)
+            statements.append(Statement(line_number, None, "BLANK", None, []))
 
-    return statements
+    return statements, errors
 
 
 def _all_lines(statements: list[Statement], mnemonic: str) -> list[int]:
@@ -564,11 +586,11 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
                 )
             )
             continue
-        if not _IDENT_RE.match(operands[0]):
+        if parse_indexed_symbol(operands[0]) is None and not _IDENT_RE.match(operands[0]):
             result.errors.append(
                 StructureIssue(
                     code="E026",
-                    message=f"Instruction '{mnemonic}' data operand must be an identifier.",
+                    message=f"Instruction '{mnemonic}' data operand must be an identifier or indexed block element.",
                     line=st.line_number,
                     is_fatal=True,
                 )

@@ -18,7 +18,7 @@ a .DATA =3
 b .DATA =4
 c .DATA
 d .DATA
-arr .BLOCK 5 =1,2,3
+arr .BLOCK =1,=2,=3
 
 		.BEGIN
 READ c

@@ -18,7 +18,7 @@ opcode table loaded dynamically from halix_v25.opcode.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement
+from services.parser import Statement, parse_indexed_symbol
 
 HALIX_MEMORY_LIMIT = 100
 
@@ -51,6 +51,7 @@ class Pass1Result:
     code_size:      int = 0
     data_size:      int = 0
     warnings:       list[str] = field(default_factory=list)
+    errors:         list["Pass1Error"] = field(default_factory=list)
 
 
 class Pass1Error(Exception):
@@ -90,13 +91,17 @@ def _parse_value(raw: str) -> int:
     return 9999
 
 
+def _resolve_data_address(entry: DataEntry, offset: int = 0) -> str:
+    return _zero_pad_addr(int(entry.address) + offset)
+
+
 # -----------------------------------------------------------------------
 # Sub-pass 1a — Data Table
 # -----------------------------------------------------------------------
 
 def _build_data_table(
     statements: list[Statement],
-) -> tuple[dict[str, DataEntry], int, list[str]]:
+) -> tuple[dict[str, DataEntry], int, list[str], list[Pass1Error]]:
     """
     Scan all .ALLOC, .DATA, and .BLOCK directives to build the data table.
 
@@ -107,8 +112,10 @@ def _build_data_table(
     """
     data_table: dict[str, DataEntry] = {}
     warnings: list[str] = []
+    errors: list[Pass1Error] = []
     d_size = 10          # default per legacy assembler
     d_addr = 0
+    alloc_line = 0
 
     for st in statements:
         if st.kind != "DIRECTIVE":
@@ -118,36 +125,88 @@ def _build_data_table(
         if st.mnemonic == ".ALLOC":
             if st.operands and st.operands[0].isdigit():
                 d_size = int(st.operands[0])
+                alloc_line = st.line_number
                 if d_size > HALIX_MEMORY_LIMIT:
-                    raise Pass1Error(
-                        f".ALLOC value {d_size} exceeds Halix data memory limit 99.",
-                        line=st.line_number,
-                        code="E032",
+                    errors.append(
+                        Pass1Error(
+                            f".ALLOC value {d_size} exceeds Halix data memory limit 99.",
+                            line=st.line_number,
+                            code="E032",
+                        )
                     )
             continue
 
         # ── .DATA ──────────────────────────────────────────────────────
         if st.mnemonic == ".DATA":
             if not st.operands:
-                raise Pass1Error(
-                    ".DATA directive missing variable name.",
-                    line=st.line_number,
+                errors.append(
+                    Pass1Error(
+                        ".DATA directive missing variable name.",
+                        line=st.line_number,
+                    )
                 )
+                continue
 
             var_name = st.operands[0].upper()
+            indexed_target = parse_indexed_symbol(var_name)
+
+            if indexed_target is not None:
+                base_name, element_index = indexed_target
+                block_entry = data_table.get(base_name)
+                if block_entry is None:
+                    errors.append(
+                        Pass1Error(
+                            f"indexed assignment target '{var_name}' refers to undefined block '{base_name}'.",
+                            line=st.line_number,
+                        )
+                    )
+                    continue
+                if block_entry.size <= 1:
+                    errors.append(
+                        Pass1Error(
+                            f"indexed assignment target '{var_name}' refers to non-block symbol '{base_name}'.",
+                            line=st.line_number,
+                        )
+                    )
+                    continue
+                if element_index >= block_entry.size:
+                    errors.append(
+                        Pass1Error(
+                            f"indexed assignment target '{var_name}' exceeds block '{base_name}' size {block_entry.size}.",
+                            line=st.line_number,
+                        )
+                    )
+                    continue
+
+                raw_value = 9999
+                if len(st.operands) == 3 and st.operands[1] == "=":
+                    raw_value = _parse_value(st.operands[2])
+                elif len(st.operands) == 2 and st.operands[1].startswith("="):
+                    raw_value = _parse_value(st.operands[1])
+
+                block_entry.values[element_index] = _zero_pad_value(raw_value)
+                if element_index == 0:
+                    block_entry.value = block_entry.values[0]
+                continue
 
             if var_name in data_table:
-                raise Pass1Error(
-                    f"duplicate variable '{var_name}' previously defined earlier in the data section.",
-                    line=st.line_number,
+                errors.append(
+                    Pass1Error(
+                        f"duplicate variable '{var_name}' previously defined earlier in the data section.",
+                        line=st.line_number,
+                    )
                 )
+                continue
 
             if d_addr >= HALIX_MEMORY_LIMIT:
-                raise Pass1Error(
-                    "data memory limit exceeded. Halix data addresses range from 00 to 99.",
-                    line=st.line_number,
-                    code="E032",
+                errors.append(
+                    Pass1Error(
+                        "data memory limit exceeded. Halix data addresses range from 00 to 99.",
+                        line=st.line_number,
+                        code="E032",
+                    )
                 )
+                continue
 
             # Extract initial value: .DATA X = 5  or  .DATA X =5  or  .DATA X
             raw_value = 9999
@@ -169,48 +228,68 @@ def _build_data_table(
 
         # ── .BLOCK (SCRUM-24) ──────────────────────────────────────────
         if st.mnemonic == ".BLOCK":
-            # Syntax confirmed by parser: .BLOCK <name> <size> [= v1,v2,...]
+            # Supported forms:
+            #   .BLOCK <name> <size>
+            #   .BLOCK <name> =v1,=v2,...
             if len(st.operands) < 2:
-                raise Pass1Error(
-                    ".BLOCK missing name or size.",
-                    line=st.line_number,
+                errors.append(
+                    Pass1Error(
+                        ".BLOCK missing name or size.",
+                        line=st.line_number,
+                    )
                 )
+                continue
 
             block_name = st.operands[0].upper()
-            if not st.operands[1].isdigit():
-                raise Pass1Error(
-                    ".BLOCK size must be numeric.",
-                    line=st.line_number,
-                )
+            init_values: list[str] = []
 
-            block_size = int(st.operands[1])
+            if st.operands[1].isdigit():
+                block_size = int(st.operands[1])
+                while len(init_values) < block_size:
+                    init_values.append("9999")
+            else:
+                for tok in st.operands[1:]:
+                    if tok == ",":
+                        continue
+                    clean = tok.lstrip("=").strip()
+                    if not clean.isdigit():
+                        errors.append(
+                            Pass1Error(
+                                f".BLOCK initializer value '{tok}' is not numeric.",
+                                line=st.line_number,
+                            )
+                        )
+                        continue
+                    init_values.append(_zero_pad_value(int(clean)))
+
+                block_size = len(init_values)
+                if block_size == 0:
+                    errors.append(
+                        Pass1Error(
+                            ".BLOCK initializer requires at least one value.",
+                            line=st.line_number,
+                        )
+                    )
+                    continue
 
             if block_name in data_table:
-                raise Pass1Error(
-                    f"duplicate block '{block_name}' previously defined earlier in the data section.",
-                    line=st.line_number,
+                errors.append(
+                    Pass1Error(
+                        f"duplicate block '{block_name}' previously defined earlier in the data section.",
+                        line=st.line_number,
+                    )
                 )
+                continue
 
             if d_addr + block_size > HALIX_MEMORY_LIMIT:
-                raise Pass1Error(
-                    f".BLOCK '{block_name}' with size {block_size} exceeds Halix data memory limit 99.",
-                    line=st.line_number,
-                    code="E032",
+                errors.append(
+                    Pass1Error(
+                        f".BLOCK '{block_name}' with size {block_size} exceeds Halix data memory limit 99.",
+                        line=st.line_number,
+                        code="E032",
+                    )
                 )
-
-            # Parse optional initializer values
-            init_values: list[str] = []
-            if len(st.operands) > 2:
-                raw_inits = st.operands[2:]
-                # Filter out '=' and ',' tokens; collect numeric values
-                for tok in raw_inits:
-                    clean = tok.lstrip("=").strip(",")
-                    if clean.isdigit():
-                        init_values.append(_zero_pad_value(int(clean)))
-
-            # Pad initializer to block_size with 9999 (legacy default)
-            while len(init_values) < block_size:
-                init_values.append("9999")
+                continue
 
             # Allocate block_size consecutive addresses.
             # Block name maps to the FIRST address (base address).
@@ -226,11 +305,14 @@ def _build_data_table(
             continue
 
     if d_addr > d_size:
-        raise Pass1Error(
-            f".ALLOC value {d_size} is too small for allocated data cells {d_addr}.",
+        errors.append(
+            Pass1Error(
+                f".ALLOC value {d_size} is too small for allocated data cells {d_addr}.",
+                line=alloc_line,
+            )
         )
 
-    return data_table, d_size, warnings
+    return data_table, d_size, warnings, errors
 
 
 # -----------------------------------------------------------------------
@@ -239,7 +321,7 @@ def _build_data_table(
 
 def _build_label_table(
     statements: list[Statement],
-) -> tuple[dict[str, LabelEntry], dict[int, str], int, list[str]]:
+) -> tuple[dict[str, LabelEntry], dict[int, str], int, list[str], list[Pass1Error]]:
     """
     Scan executable statements between .BEGIN and .END.
     Build the label table and track instruction addresses.
@@ -253,6 +335,7 @@ def _build_label_table(
     label_table: dict[str, LabelEntry] = {}
     line_to_iaddr: dict[int, str] = {}
     warnings: list[str] = []
+    errors: list[Pass1Error] = []
 
     # Find .BEGIN and .END line numbers from the statement list
     begin_line: Optional[int] = None
@@ -266,9 +349,11 @@ def _build_label_table(
                 end_line = st.line_number  # last .END wins
 
     if begin_line is None:
-        raise Pass1Error("No .BEGIN directive found during Pass 1.")
+        errors.append(Pass1Error("No .BEGIN directive found during Pass 1."))
     if end_line is None:
-        raise Pass1Error("No .END directive found during Pass 1.")
+        errors.append(Pass1Error("No .END directive found during Pass 1."))
+    if errors:
+        return label_table, line_to_iaddr, 0, warnings, errors
 
     i_addr = 0
 
@@ -287,19 +372,24 @@ def _build_label_table(
 
         # Record label if present — label gets current address
         if i_addr >= HALIX_MEMORY_LIMIT:
-            raise Pass1Error(
-                "instruction memory limit exceeded. Halix instruction addresses range from 00 to 99.",
-                line=st.line_number,
-                code="E031",
+            errors.append(
+                Pass1Error(
+                    "instruction memory limit exceeded. Halix instruction addresses range from 00 to 99.",
+                    line=st.line_number,
+                    code="E031",
+                )
             )
+            break
 
         if st.label is not None:
             label_name = st.label.upper()
             if label_name in label_table:
                 first_line = label_table[label_name].line_number
-                raise Pass1Error(
-                    f"duplicate label '{label_name}' previously defined at line {first_line}.",
-                    line=st.line_number,
+                errors.append(
+                    Pass1Error(
+                        f"duplicate label '{label_name}' previously defined at line {first_line}.",
+                        line=st.line_number,
+                    )
                 )
             else:
                 label_table[label_name] = LabelEntry(
@@ -312,7 +402,7 @@ def _build_label_table(
         line_to_iaddr[st.line_number] = _zero_pad_addr(i_addr)
         i_addr += 1
 
-    return label_table, line_to_iaddr, i_addr, warnings
+    return label_table, line_to_iaddr, i_addr, warnings, errors
 
 
 # -----------------------------------------------------------------------
@@ -336,16 +426,18 @@ def run_pass1(statements: list[Statement]) -> Pass1Result:
     result = Pass1Result()
 
     # Sub-pass 1a: data and block table
-    data_table, data_size, data_warnings = _build_data_table(statements)
+    data_table, data_size, data_warnings, data_errors = _build_data_table(statements)
     result.data_table = data_table
     result.data_size = data_size
     result.warnings.extend(data_warnings)
+    result.errors.extend(data_errors)
 
     # Sub-pass 1b: label table and location counter
-    label_table, line_to_iaddr, code_size, label_warnings = _build_label_table(statements)
+    label_table, line_to_iaddr, code_size, label_warnings, label_errors = _build_label_table(statements)
     result.label_table = label_table
     result.line_to_iaddr = line_to_iaddr
     result.code_size = code_size
     result.warnings.extend(label_warnings)
+    result.errors.extend(label_errors)
 
     return result

@@ -43,6 +43,36 @@ def write_hlx(hlx_path: str, pass1_result: Pass1Result, pass2_result: Pass2Resul
 
 
 # -----------------------------------------------------------------------
+# .sym writer
+# -----------------------------------------------------------------------
+
+def write_sym(sym_path: str, pass1_result: Pass1Result) -> None:
+    """Write the symbol table dump (.sym)."""
+    with open(sym_path, "w") as f:
+        f.write("DataTable\n")
+        f.write("---------\n")
+        if not pass1_result.data_table:
+            f.write("<empty>\n")
+        else:
+            for entry in sorted(pass1_result.data_table.values(), key=lambda e: int(e.address)):
+                values = ", ".join(entry.values)
+                f.write(
+                    f"{entry.name} addr={entry.address} size={entry.size} values=[{values}]\n"
+                )
+
+        f.write("\n")
+        f.write("LabelTable\n")
+        f.write("----------\n")
+        if not pass1_result.label_table:
+            f.write("<empty>\n")
+        else:
+            for entry in sorted(pass1_result.label_table.values(), key=lambda e: int(e.address)):
+                f.write(
+                    f"{entry.name} addr={entry.address} line={entry.line_number}\n"
+                )
+
+
+# -----------------------------------------------------------------------
 # .hll writer
 # -----------------------------------------------------------------------
 
@@ -54,6 +84,7 @@ def write_hll(
     pass2_result: Pass2Result,
     source_lines: list[str],
     statements,
+    source_columns: tuple[int, int] | None = None,
 ) -> None:
     """Write the Halix assembler listing file (.hll)."""
     with open(hll_path, "w") as f:
@@ -69,21 +100,29 @@ def write_hll(
 
         instr_map = {instr.line_number: instr for instr in pass2_result.instructions}
         data_line_map = _build_data_line_map(pass1_result, statements, source_lines)
+        statement_map = {st.line_number: st for st in statements}
 
         for line_num, raw_line in enumerate(source_lines, start=1):
             raw = raw_line.rstrip("\n")
+            rendered_source = raw
+            if source_columns is not None and line_num in statement_map:
+                rendered_source = _render_source_line(
+                    statement_map[line_num],
+                    raw,
+                    source_columns,
+                )
 
             if line_num in instr_map:
                 instr = instr_map[line_num]
-                f.write(f"{instr.iaddr}  {instr.machine_word}  {raw}\n")
+                f.write(f"{instr.iaddr}  {instr.machine_word}  {rendered_source}\n")
                 continue
 
             if line_num in data_line_map:
                 addr, value = data_line_map[line_num]
-                f.write(f"{addr}  {value}  {raw}\n")
+                f.write(f"{addr}  {value}  {rendered_source}\n")
                 continue
 
-            f.write(f"          {raw}\n")
+            f.write(f"          {rendered_source}\n")
 
 
 # -----------------------------------------------------------------------
@@ -112,3 +151,77 @@ def _build_data_line_map(
         data_line_map[st.line_number] = (entry.address, entry.value)
 
     return data_line_map
+
+
+def _render_source_line(statement, raw_line: str, source_columns: tuple[int, int]) -> str:
+    """Render the source portion of a listing line using fixed label/mnemonic columns."""
+    if statement.kind == "BLANK":
+        return raw_line
+
+    label_width, mnemonic_width = source_columns
+    code_part, comment_part = _split_comment(raw_line)
+
+    label_text = ""
+    mnemonic_text = ""
+    operand_text = ""
+
+    if statement.kind == "INSTRUCTION":
+        if statement.label is not None:
+            label_text = f"{statement.label}:"
+        mnemonic_text = statement.mnemonic or ""
+        operand_text = _join_operand_tokens(statement.operands)
+    elif statement.kind == "DIRECTIVE":
+        mnemonic_text = statement.mnemonic or ""
+        operands = list(statement.operands)
+        if statement.mnemonic in {".DATA", ".BLOCK"} and operands:
+            label_text = operands[0]
+            operands = operands[1:]
+        elif statement.label is not None:
+            label_text = f"{statement.label}:"
+        operand_text = _join_operand_tokens(operands)
+
+    rendered = f"{label_text:<{label_width}}{mnemonic_text:<{mnemonic_width}}"
+    if operand_text:
+        rendered = f"{rendered}{operand_text}"
+    rendered = rendered.rstrip()
+
+    if comment_part:
+        if rendered:
+            return f"{rendered}  {comment_part}"
+        return comment_part
+
+    if rendered:
+        return rendered
+    return code_part.rstrip()
+
+
+def _split_comment(raw_line: str) -> tuple[str, str]:
+    comment_index = raw_line.find("#")
+    if comment_index < 0:
+        return raw_line, ""
+    return raw_line[:comment_index].rstrip(), raw_line[comment_index:].rstrip()
+
+
+def _join_operand_tokens(tokens: list[str]) -> str:
+    if not tokens:
+        return ""
+
+    parts: list[str] = []
+    for token in tokens:
+        if token == ",":
+            if parts:
+                parts[-1] = parts[-1].rstrip() + ","
+            else:
+                parts.append(",")
+            continue
+        if token == "=":
+            if parts:
+                parts[-1] = parts[-1].rstrip() + "="
+            else:
+                parts.append("=")
+            continue
+        if parts and not parts[-1].endswith(("=", ",")):
+            parts.append(" " + token)
+        else:
+            parts.append(token)
+    return "".join(parts).strip()
