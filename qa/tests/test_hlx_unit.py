@@ -385,6 +385,32 @@ def test_par_015():
 run("PAR-015", "Dynamic indexed operand encodes through indexed instruction path", test_par_015)
 
 
+def test_par_016():
+    """Single-element .BLOCK remains indexable at [0]"""
+    source = (
+        ".ALLOC 2\n"
+        "ARR .BLOCK =98\n"
+        ".BEGIN\n"
+        "LOAD ARR[0]\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    pass1_result = run_pass1(stmts)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
+    arr_entry = pass1_result.data_table["ARR"]
+    assert arr_entry.is_block, "Expected ARR to be tracked as a block"
+    opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
+    pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines)
+    assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
+    words = [instr.machine_word for instr in pass2_result.instructions]
+    assert words == ["0300", "9900"], f"Unexpected machine words: {words}"
+
+run("PAR-016", "Single-element .BLOCK allows indexed access at [0]", test_par_016)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 3: STRUCTURE CHECK TESTS (check_program_structure)
 # ─────────────────────────────────────────────────────────────────────────────

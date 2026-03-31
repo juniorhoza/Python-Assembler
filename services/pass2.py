@@ -97,7 +97,7 @@ def _resolve_data_operand(
             line=0,
             message=f"undefined variable '{base_name}' - addr 99 used.",
         )
-    if data_entry.size <= 1:
+    if not data_entry.is_block:
         return None, Pass2Issue(
             code="E030",
             line=0,
