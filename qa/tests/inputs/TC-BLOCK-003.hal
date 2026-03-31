@@ -1,0 +1,12 @@
+        .ALLOC 4
+ARR .BLOCK =10,=20,=30
+TMP .DATA =0
+        .BEGIN
+LOAD    ARR[0]
+STORE   TMP
+LOAD    ARR[1]
+STORE   TMP
+LOAD    ARR[2]
+STORE   TMP
+HALT
+        .END

@@ -1,0 +1,6 @@
+        .ALLOC 3
+ARR .BLOCK =99
+n .DATA =0
+        .BEGIN
+HALT
+        .END

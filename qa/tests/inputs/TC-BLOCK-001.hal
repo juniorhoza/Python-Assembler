@@ -1,0 +1,8 @@
+        .ALLOC 4
+ARR .BLOCK =4,=7,=2
+n .DATA =0
+        .BEGIN
+LOAD    ARR[0]
+STORE   n
+HALT
+        .END

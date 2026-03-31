@@ -35,6 +35,5 @@ Thumbs.db
 # Assembler outputs
 *.hlx
 *.hll
-*.hal
 *.sym
 
