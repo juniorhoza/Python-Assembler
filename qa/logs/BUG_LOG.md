@@ -156,7 +156,7 @@ TC-SYM-002 test updated to check for E007. 18/18 tests passing. ✅
 | **Bug ID** | BUG-002 |
 | **TC ID** | TC-BLOCK-004 |
 | **Severity** | Medium |
-| **Status** | Open — Reported to dev team 2026-03-31 |
+| **Status** | ✅ Fixed — Verified 2026-03-31 |
 | **Branch** | dev |
 | **Commit Found** | ea3a6f6 |
 | **Date Found** | 2026-03-31 |

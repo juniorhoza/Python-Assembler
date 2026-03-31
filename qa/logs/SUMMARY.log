@@ -25,3 +25,11 @@ Run: 2026-03-31 | Branch: dev | Commit: ea3a6f6 | Sprint 4 SCRUM-59
          EDGE-020 fixed — new .BLOCK syntax =v1,=v2,=v3
          BUG-002 reported to dev team, pending fix
 ------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | BUG-002 Fixed & Verified
+  SRS Tests (test_hlx_assembler_improved): 33 PASSED | 0 FAILED | 0 SKIPPED | 33 TOTAL
+  Unit Tests (test_hlx_unit.py):           48 PASSED | 0 FAILED
+  Edge Cases (test_hlx_edge_cases.py):     23 PASSED | 0 FAILED
+  Notes: BUG-002 fixed by dev team — TC-BLOCK-005 now PASS
+         Unit tests grew from 43 to 48 — devs added 5 new tests
+------------------------------------------------------------

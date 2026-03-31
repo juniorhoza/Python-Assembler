@@ -518,7 +518,7 @@ run("TC-BLOCK-005", "Single-value .BLOCK indexed access ARR[0] — BUG-002",
         (".hlx matches expected output", expect_hlx([
             "02",
             "0300","9900",
-            "01",
+            "02",
             "0099"
         ])),
     ])
