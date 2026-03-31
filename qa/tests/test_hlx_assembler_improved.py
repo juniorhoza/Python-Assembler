@@ -458,6 +458,70 @@ run("TC-ERR-005", "Exit code 0 on success, non-zero on error",
         ])),
     ])
 
+# ── TC-BLOCK: New .BLOCK syntax (SCRUM-59) ───────────────────────────────────
+print("\n------------------------------------------------------------")
+print(" TC-BLOCK: .BLOCK New Syntax & Indexed Access (SCRUM-59)")
+print("------------------------------------------------------------")
+
+run("TC-BLOCK-001", ".BLOCK initialized =4,=7,=2 — indexed access ARR[0]",
+    "TC-BLOCK-001.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "03",
+            "0300","0403","9900",
+            "04",
+            "0004","0007","0002","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-002", ".BLOCK empty format — 5 uninitialized slots",
+    "TC-BLOCK-002.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "01",
+            "9900",
+            "06",
+            "9999","9999","9999","9999","9999","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-003", ".BLOCK indexed access ARR[0], ARR[1], ARR[2]",
+    "TC-BLOCK-003.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "07",
+            "0300","0403","0301","0403","0302","0403","9900",
+            "04",
+            "0010","0020","0030","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-004", ".BLOCK single value =99 — assembles correctly",
+    "TC-BLOCK-004.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "01",
+            "9900",
+            "03",
+            "0099","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-005", "Single-value .BLOCK indexed access ARR[0] — BUG-002",
+    "TC-BLOCK-005.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "02",
+            "0300","9900",
+            "01",
+            "0099"
+        ])),
+    ])
 
 
 # ── Summary ───────────────────────────────────────────────────────────────────
@@ -481,3 +545,4 @@ if SKIP_COUNT > 0:
 
 print()
 sys.exit(0 if FAIL_COUNT == 0 else 1)
+

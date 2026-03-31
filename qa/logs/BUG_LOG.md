@@ -146,3 +146,42 @@ Dev team assigned error code E007. Now correctly reports:
 
 **Verified:**
 TC-SYM-002 test updated to check for E007. 18/18 tests passing. ✅
+
+---
+
+## BUG-002 — Single-value .BLOCK not recognized for indexed access
+
+| Field | Value |
+|---|---|
+| **Bug ID** | BUG-002 |
+| **TC ID** | TC-BLOCK-004 |
+| **Severity** | Medium |
+| **Status** | Open — Reported to dev team 2026-03-31 |
+| **Branch** | dev |
+| **Commit Found** | ea3a6f6 |
+| **Date Found** | 2026-03-31 |
+| **Tester** | Ruxandra Flueras |
+
+**Steps to Reproduce:**
+```
+        .ALLOC 2
+ARR .BLOCK =99
+        .BEGIN
+LOAD    ARR[0]
+HALT
+        .END
+```
+Run: `python3 HASM_CLI.py test.hal`
+
+**Expected Result:**
+`LOAD ARR[0]` encodes as `0300` (opcode 03 + base address 00 + index 0). Assembly succeeds.
+
+**Actual Result:**
+`ERROR E030: indexed operand 'ARR[0]' refers to non-block symbol 'ARR' - addr 99 used.` No .hlx produced.
+
+**Root Cause (QA Finding):**
+Multi-value blocks (e.g. `ARR .BLOCK =4,=7,=2`) are correctly registered in the block symbol table and support indexed access. Single-value blocks (e.g. `ARR .BLOCK =99`) appear to not be registered as block symbols, causing pass1.py to reject indexed access on them.
+
+**Confirmed by dev team:** 2026-03-31
+
+**Fix Notes:** *(dev team fills this in)*

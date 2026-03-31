@@ -435,14 +435,14 @@ run("EDGE-019", "Multiple .END produces W003 warning not error", test_edge_019)
 
 
 def test_edge_020():
-    """.BLOCK with initializer values — valid"""
+    """.BLOCK with new format =v1,=v2,=v3 — valid"""
     stmts = make_statements(
-        "        .ALLOC 5\nARR .Block 3 =1,2,3\n        .BEGIN\nHALT\n        .END"
+        "        .ALLOC 5\nARR .BLOCK =1,=2,=3\n        .BEGIN\nHALT\n        .END"
     )
     blocks = [s for s in stmts if s.mnemonic == ".BLOCK"]
     assert len(blocks) == 1, f"Expected one .BLOCK, got {len(blocks)}"
 
-run("EDGE-020", ".BLOCK with initializer values =1,2,3 parsed correctly", test_edge_020)
+run("EDGE-020", ".BLOCK with initializer values =1,=2,=3 parsed correctly (new format)", test_edge_020)
 
 
 def test_edge_021():
