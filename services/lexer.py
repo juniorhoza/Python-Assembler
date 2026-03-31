@@ -34,7 +34,7 @@ _LABEL_DEF_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*:$")
 _IMMEDIATE_RE = re.compile(r"^=\S+$")
 _NUMBER_RE = re.compile(r"^\d+$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_INDEXED_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[\d+\]$")
+_INDEXED_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[(?:\d+|[A-Za-z_][A-Za-z0-9_]*)\]$")
 
 
 def _invalid_char(raw: str) -> Optional[str]:

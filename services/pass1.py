@@ -18,7 +18,7 @@ opcode table loaded dynamically from halix_v25.opcode.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement, parse_indexed_symbol
+from services.parser import Statement, parse_literal_indexed_symbol
 
 HALIX_MEMORY_LIMIT = 100
 
@@ -148,7 +148,7 @@ def _build_data_table(
                 continue
 
             var_name = st.operands[0].upper()
-            indexed_target = parse_indexed_symbol(var_name)
+            indexed_target = parse_literal_indexed_symbol(var_name)
 
             if indexed_target is not None:
                 base_name, element_index = indexed_target
