@@ -22,7 +22,7 @@ SCRUM-23: FR-GEN-001, FR-GEN-005
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement, parse_indexed_symbol
+from services.parser import Statement, parse_literal_indexed_symbol
 from services.pass1 import Pass1Result, DataEntry, LabelEntry
 from services.HASM_opcode_Loader import OpcodeTable, OPERAND_NONE, OPERAND_BRANCH, OPERAND_IMMEDIATE, OPERAND_DATA
 
@@ -78,7 +78,7 @@ def _resolve_data_operand(
     operand: str,
     data_table: dict[str, DataEntry],
 ) -> tuple[str | None, Pass2Issue | None]:
-    indexed = parse_indexed_symbol(operand)
+    indexed = parse_literal_indexed_symbol(operand)
     if indexed is None:
         data_entry = data_table.get(operand.upper())
         if data_entry is None:
@@ -97,7 +97,7 @@ def _resolve_data_operand(
             line=0,
             message=f"undefined variable '{base_name}' - addr 99 used.",
         )
-    if data_entry.size <= 1:
+    if not data_entry.is_block:
         return None, Pass2Issue(
             code="E030",
             line=0,

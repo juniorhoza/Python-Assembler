@@ -98,7 +98,9 @@ def write_hll(
         f.write(f"Machine code file: {hlx_path}\n")
         f.write("\n")
 
-        instr_map = {instr.line_number: instr for instr in pass2_result.instructions}
+        instr_map: dict[int, list] = {}
+        for instr in pass2_result.instructions:
+            instr_map.setdefault(instr.line_number, []).append(instr)
         data_line_map = _build_data_line_map(pass1_result, statements, source_lines)
         statement_map = {st.line_number: st for st in statements}
 
@@ -113,8 +115,9 @@ def write_hll(
                 )
 
             if line_num in instr_map:
-                instr = instr_map[line_num]
-                f.write(f"{instr.iaddr}  {instr.machine_word}  {rendered_source}\n")
+                for idx, instr in enumerate(instr_map[line_num]):
+                    source_text = rendered_source if idx == 0 else ""
+                    f.write(f"{instr.iaddr}  {instr.machine_word}  {source_text}\n")
                 continue
 
             if line_num in data_line_map:

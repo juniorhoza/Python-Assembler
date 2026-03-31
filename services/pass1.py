@@ -18,7 +18,7 @@ opcode table loaded dynamically from halix_v25.opcode.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement, parse_indexed_symbol
+from services.parser import Statement, parse_literal_indexed_symbol
 
 HALIX_MEMORY_LIMIT = 100
 
@@ -34,6 +34,7 @@ class DataEntry:
     value: str          # zero-padded 4-digit initial value e.g. '0005', '9999'
     size: int = 1       # 1 for .DATA, N for .BLOCK
     values: list[str] = field(default_factory=list)  # multi-value for .BLOCK
+    is_block: bool = False
 
 
 @dataclass
@@ -148,7 +149,7 @@ def _build_data_table(
                 continue
 
             var_name = st.operands[0].upper()
-            indexed_target = parse_indexed_symbol(var_name)
+            indexed_target = parse_literal_indexed_symbol(var_name)
 
             if indexed_target is not None:
                 base_name, element_index = indexed_target
@@ -161,7 +162,7 @@ def _build_data_table(
                         )
                     )
                     continue
-                if block_entry.size <= 1:
+                if not block_entry.is_block:
                     errors.append(
                         Pass1Error(
                             f"indexed assignment target '{var_name}' refers to non-block symbol '{base_name}'.",
@@ -221,6 +222,7 @@ def _build_data_table(
                 value=_zero_pad_value(raw_value),
                 size=1,
                 values=[_zero_pad_value(raw_value)],
+                is_block=False,
             )
             data_table[var_name] = entry
             d_addr += 1
@@ -299,6 +301,7 @@ def _build_data_table(
                 value=init_values[0],
                 size=block_size,
                 values=init_values,
+                is_block=True,
             )
             data_table[block_name] = entry
             d_addr += block_size

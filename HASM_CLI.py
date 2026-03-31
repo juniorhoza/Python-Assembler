@@ -8,7 +8,7 @@ from services.HASM_opcode_Loader import load_opcode_table
 from services.errors import ErrorHandler, color_error, color_warning
 from services.lexer import tokenize_source_collect
 from services.pass1 import run_pass1
-from services.parser import parse_tokens_collect, check_program_structure
+from services.parser import parse_tokens_collect, check_program_structure, lower_dynamic_index_operands
 from services.pass2 import run_pass2, Pass2Error
 from services.output import write_hlx, write_hll, write_sym
 
@@ -410,6 +410,22 @@ def main():
         error_handler.emit_and_exit(exit_code)
 
     print(f"Program structure OK [{source_file}].")
+
+    # ------------------------------------------------------------------
+    # Step 5b: Lower dynamic indexed operands like ARR[i] to Halix
+    # indexed-address instruction sequences before pass 1 / pass 2.
+    # ------------------------------------------------------------------
+    statements, lowering_errors = lower_dynamic_index_operands(statements)
+    if lowering_errors:
+        for err in lowering_errors:
+            error_handler.report(
+                code=err.code,
+                message=str(err),
+                line=err.line,
+                filename=source_file,
+                is_fatal=True,
+            )
+        error_handler.emit_and_exit(7)
 
     # ------------------------------------------------------------------
     # Step 6: Pass 1 — build data/label tables and track location counters

@@ -17,7 +17,10 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)).replace("qa/tests", ""))
 
 from services.lexer import tokenize_line, tokenize_source, LexicalError
-from services.parser import parse_tokens, check_program_structure, ParserError
+from services.parser import parse_tokens, check_program_structure, ParserError, lower_dynamic_index_operands
+from services.pass1 import run_pass1
+from services.pass2 import run_pass2
+from services.HASM_opcode_Loader import load_opcode_table
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Test runner helpers
@@ -56,6 +59,9 @@ OPCODES = {
     "JUMP", "JUMPGT", "JUMPEQ", "JUMPLT", "JUMPGE", "JUMPLE", "JUMPNE",
     "NOOP", "CLEAR", "SET", "INCR", "DECR", "HALT", "RET", "BRANCH",
     "BRT", "BRF", "BSUB", "SETI", "ADDI", "SUBI", "MULTI", "DIVI", "MODI",
+    "LOADA", "MOVEB", "MOVEA", "ILOAD", "ISTORE", "IADD", "ISUB", "IMULT",
+    "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ", "ICNE", "ICGE", "ICGT", "IREAD",
+    "IWRITE", "IINCR", "IDECR",
 }
 
 def make_statements(source: str):
@@ -117,6 +123,15 @@ def test_lex_005():
     assert "COMMENT" in types, f"Expected COMMENT token, got {types}"
 
 run("LEX-005", "Comment included when keep_comments=True", test_lex_005)
+
+
+def test_lex_006():
+    """Dynamic indexed operand token recognized"""
+    tokens = tokenize_line("LOAD ARR[i]", 1, opcode_mnemonics=OPCODES)
+    values = [t.value for t in tokens]
+    assert "ARR[I]" in values, f"Expected ARR[I] operand token, got {values}"
+
+run("LEX-006", "Dynamic indexed operand ARR[i] tokenized", test_lex_006)
 
 
 def test_lex_006():
@@ -313,6 +328,87 @@ def test_par_012():
     assert len(labeled) == 1, f"Expected one labeled statement, got {len(labeled)}"
 
 run("PAR-012", "Label SKIP: on instruction parsed correctly", test_par_012)
+
+
+def test_par_013():
+    """Dynamic indexed operand parsed on instruction"""
+    stmts = make_statements(
+        "        .ALLOC 4\nARR .BLOCK 3\nI .DATA =1\n        .BEGIN\nLOAD ARR[i]\nHALT\n        .END"
+    )
+    loads = [s for s in stmts if s.kind == "INSTRUCTION" and s.mnemonic == "LOAD"]
+    assert len(loads) == 1, f"Expected one LOAD, got {len(loads)}"
+    assert loads[0].operands == ["ARR[I]"], f"Expected operand ARR[I], got {loads[0].operands}"
+
+run("PAR-013", "LOAD ARR[i] parsed with dynamic indexed operand", test_par_013)
+
+
+def test_par_014():
+    """Dynamic indexed operand lowers to indexed Halix sequence"""
+    stmts = make_statements(
+        "        .ALLOC 4\nARR .BLOCK 3\nI .DATA =1\n        .BEGIN\nTOP: LOAD ARR[i]\nHALT\n        .END"
+    )
+    lowered, errors = lower_dynamic_index_operands(stmts)
+    assert not errors, f"Expected no lowering errors, got {[str(e) for e in errors]}"
+    code = [s for s in lowered if s.kind == "INSTRUCTION"]
+    mnemonics = [s.mnemonic for s in code]
+    assert mnemonics[:6] == ["LOADA", "MOVEB", "LOAD", "MOVEA", "ILOAD", "HALT"], \
+        f"Unexpected lowered mnemonics: {mnemonics}"
+    assert code[0].label == "TOP", f"Expected label TOP on first lowered instruction, got {code[0].label}"
+
+run("PAR-014", "Dynamic indexed operand lowers to indexed instruction sequence", test_par_014)
+
+
+def test_par_015():
+    """Lowered dynamic indexed operand encodes to expected machine words"""
+    source = (
+        "        .ALLOC 4\n"
+        "ARR .BLOCK 3\n"
+        "I .DATA =1\n"
+        "        .BEGIN\n"
+        "LOAD ARR[i]\n"
+        "HALT\n"
+        "        .END\n"
+    )
+    lines = source.strip().splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    lowered, errors = lower_dynamic_index_operands(stmts)
+    assert not errors, f"Expected no lowering errors, got {[str(e) for e in errors]}"
+    pass1_result = run_pass1(lowered)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
+    opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
+    pass2_result = run_pass2(lowered, pass1_result, opcode_table, lines)
+    assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
+    words = [instr.machine_word for instr in pass2_result.instructions]
+    assert words == ["3500", "5500", "0303", "5600", "3900", "9900"], f"Unexpected machine words: {words}"
+
+run("PAR-015", "Dynamic indexed operand encodes through indexed instruction path", test_par_015)
+
+
+def test_par_016():
+    """Single-element .BLOCK remains indexable at [0]"""
+    source = (
+        ".ALLOC 2\n"
+        "ARR .BLOCK =98\n"
+        ".BEGIN\n"
+        "LOAD ARR[0]\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    pass1_result = run_pass1(stmts)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
+    arr_entry = pass1_result.data_table["ARR"]
+    assert arr_entry.is_block, "Expected ARR to be tracked as a block"
+    opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
+    pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines)
+    assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
+    words = [instr.machine_word for instr in pass2_result.instructions]
+    assert words == ["0300", "9900"], f"Unexpected machine words: {words}"
+
+run("PAR-016", "Single-element .BLOCK allows indexed access at [0]", test_par_016)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -35,7 +35,7 @@ class ParserError(Exception):
 
 
 _IDENT_RE = re.compile(r"^[A-Z_][A-Z0-9_]*$")
-_INDEXED_IDENT_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)\[(\d+)\]$")
+_INDEXED_IDENT_RE = re.compile(r"^([A-Z_][A-Z0-9_]*)\[(\d+|[A-Z_][A-Z0-9_]*)\]$")
 _DIRECTIVES = {".ALLOC", ".DATA", ".BLOCK", ".BEGIN", ".END"}
 
 # ISA operand groups from design document section 3.4.1
@@ -47,6 +47,25 @@ NO_OPERAND_MNEMONICS = {
 }
 BRANCH_MNEMONICS = {"BRANCH", "BRT", "BRF", "BSUB"}
 IMMEDIATE_MNEMONICS = {"SETI", "ADDI", "SUBI", "MULTI", "DIVI", "MODI"}
+INDIRECT_MNEMONIC_MAP = {
+    "READ": "IREAD",
+    "WRITE": "IWRITE",
+    "LOAD": "ILOAD",
+    "STORE": "ISTORE",
+    "INCR": "IINCR",
+    "DECR": "IDECR",
+    "ADD": "IADD",
+    "SUB": "ISUB",
+    "MULT": "IMULT",
+    "DIV": "IDIV",
+    "MOD": "IMOD",
+    "CLT": "ICLT",
+    "CLE": "ICLE",
+    "CEQ": "ICEQ",
+    "CNE": "ICNE",
+    "CGE": "ICGE",
+    "CGT": "ICGT",
+}
 
 
 @dataclass
@@ -87,15 +106,22 @@ def _validate_symbol_name(tok: Token, what: str) -> None:
         raise ParserError(tok.line_number, f"{what} '{tok.value}' cannot be a directive name", tok.column)
 
 
-def parse_indexed_symbol(value: str) -> tuple[str, int] | None:
+def parse_indexed_symbol(value: str) -> tuple[str, str] | None:
     match = _INDEXED_IDENT_RE.match(value.upper())
     if match is None:
         return None
-    return match.group(1), int(match.group(2))
+    return match.group(1), match.group(2)
+
+
+def parse_literal_indexed_symbol(value: str) -> tuple[str, int] | None:
+    indexed = parse_indexed_symbol(value)
+    if indexed is None or not indexed[1].isdigit():
+        return None
+    return indexed[0], int(indexed[1])
 
 
 def _validate_data_target(tok: Token, what: str) -> None:
-    indexed = parse_indexed_symbol(tok.value)
+    indexed = parse_literal_indexed_symbol(tok.value)
     if indexed is not None:
         base_name = indexed[0]
         _validate_identifier(Token(tok.token_type, base_name, tok.line_number, tok.column), what)
@@ -597,3 +623,63 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
             )
 
     return result
+
+
+def lower_dynamic_index_operands(
+    statements: list[Statement],
+) -> tuple[list[Statement], list[ParserError]]:
+    lowered: list[Statement] = []
+    errors: list[ParserError] = []
+    begin_line: int | None = None
+    end_line: int | None = None
+
+    for st in statements:
+        if st.kind != "DIRECTIVE":
+            continue
+        if st.mnemonic == ".BEGIN" and begin_line is None:
+            begin_line = st.line_number
+        if st.mnemonic == ".END":
+            end_line = st.line_number
+
+    for st in statements:
+        if (
+            st.kind != "INSTRUCTION"
+            or st.mnemonic is None
+            or begin_line is None
+            or end_line is None
+            or st.line_number <= begin_line
+            or st.line_number >= end_line
+            or len(st.operands) != 1
+        ):
+            lowered.append(st)
+            continue
+
+        indexed = parse_indexed_symbol(st.operands[0])
+        if indexed is None or indexed[1].isdigit():
+            lowered.append(st)
+            continue
+
+        base_name, index_name = indexed
+        indirect_mnemonic = INDIRECT_MNEMONIC_MAP.get(st.mnemonic.upper())
+        if indirect_mnemonic is None:
+            errors.append(
+                ParserError(
+                    st.line_number,
+                    f"instruction '{st.mnemonic}' does not support dynamic indexed operand '{st.operands[0]}'",
+                    code="E026",
+                )
+            )
+            lowered.append(st)
+            continue
+
+        lowered.extend(
+            [
+                Statement(st.line_number, st.label, "INSTRUCTION", "LOADA", [base_name]),
+                Statement(st.line_number, None, "INSTRUCTION", "MOVEB", []),
+                Statement(st.line_number, None, "INSTRUCTION", "LOAD", [index_name]),
+                Statement(st.line_number, None, "INSTRUCTION", "MOVEA", []),
+                Statement(st.line_number, None, "INSTRUCTION", indirect_mnemonic, []),
+            ]
+        )
+
+    return lowered, errors
