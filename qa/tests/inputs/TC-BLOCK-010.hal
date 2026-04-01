@@ -1,0 +1,6 @@
+        .ALLOC 4
+ARR .BLOCK =1=2=3
+n .DATA =0
+        .BEGIN
+HALT
+        .END

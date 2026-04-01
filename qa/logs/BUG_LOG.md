@@ -185,3 +185,68 @@ Multi-value blocks (e.g. `ARR .BLOCK =4,=7,=2`) are correctly registered in the 
 **Confirmed by dev team:** 2026-03-31
 
 **Fix Notes:** *(dev team fills this in)*
+
+---
+
+## PENDING-001 — ARR[i] .DATA element set not implemented
+
+| Field | Value |
+|---|---|
+| **ID** | PENDING-001 |
+| **Severity** | Medium |
+| **Status** | Open — Pending dev implementation |
+| **Date** | 2026-03-31 |
+| **Tester** | Ruxandra Flueras |
+
+**Observed:** `ARR[i] .DATA =99` produces `ERROR E006: invalid variable name 'ARR[I]'`
+
+**Expected:** Should set element at index i to value 99.
+
+**Card says:** "Set (write) element at index i without affecting other elements"
+
+**Action:** Raise with dev team for next sprint.
+
+---
+
+## NOTE-001 — SCRUM-59 card syntax discrepancy
+
+| Field | Value |
+|---|---|
+| **ID** | NOTE-001 |
+| **Status** | ✅ Resolved — Dev lead confirmed =1,=2,=3 is correct. Jira card had a typo. |
+| **Date** | 2026-03-31 |
+
+**Card says:** new format is `x .BLOCK =1=2=3=4` (chained equals, no commas)
+
+**Actually implemented:** `x .BLOCK =1,=2,=3` (comma separated, each value has own =)
+
+**Action:** Team lead to update Jira card to reflect actual implementation.
+
+---
+
+## DISC-005 — TC-CON-003 reference comparison difference (intentional)
+
+| Field | Value |
+|---|---|
+| **Bug ID** | DISC-005 |
+| **TC ID** | TC-CON-003 |
+| **Severity** | N/A |
+| **Status** | ✅ Confirmed Intentional Design |
+| **Date** | 2026-03-31 |
+| **Tester** | Ruxandra Flueras |
+
+**Observed:**
+Reference comparison FAIL for TC-CON-003.
+Our assembler: `SETI =100` → WARNING W005 + truncates to `2400`
+Reference assembler: `SETI =100` → no warning + keeps full value `24100`
+
+**Resolution:**
+This is an intentional design difference. Our assembler is stricter — it warns
+the user and truncates the value. The reference silently keeps the full value.
+Added to list of known intentional reference comparison differences.
+
+**Known intentional reference failures (now 4 total):**
+- TC-PAR-003 — .BLOCK slots written to .hlx, reference omits them
+- TC-DIR-001c — different exit codes on duplicate .ALLOC
+- TC-DIR-006 — same as TC-PAR-003
+- TC-CON-003 — immediate value truncation behavior differs

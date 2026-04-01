@@ -1,0 +1,9 @@
+        .ALLOC 5
+ARR .BLOCK =4,=7,=2
+I .DATA =1
+TMP .DATA =0
+        .BEGIN
+LOAD    ARR[I]
+STORE   TMP
+HALT
+        .END

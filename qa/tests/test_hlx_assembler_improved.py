@@ -523,6 +523,78 @@ run("TC-BLOCK-005", "Single-value .BLOCK indexed access ARR[0] — BUG-002",
         ])),
     ])
 
+run("TC-BLOCK-006", ".BLOCK variable index LOAD ARR[i] — dynamic array access",
+    "TC-BLOCK-006.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "07",
+            "3500","5500","0303","5600","3900","0404","9900",
+            "05",
+            "0004","0007","0002","0001","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-007", "PENDING-001 — ARR[i] .DATA element set not yet implemented",
+    "TC-BLOCK-007.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("No E006 error", lambda c,o,f: "e006" not in o.lower()),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+    ])
+
+run("TC-BLOCK-008", ".BLOCK dynamic array loop — LOAD ARR[i] with INCR/STORE pattern",
+    "TC-BLOCK-008.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "10",
+            "3500","5500","0303","5600","3900","0404","1600","0403","1000","9900",
+            "08",
+            "0004","0007","0002","0000","0000"
+        ])),
+    ])
+
+run("TC-BLOCK-009", ".BLOCK uppercase I index — LOAD ARR[I] case insensitive",
+    "TC-BLOCK-009.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "07",
+            "3500","5500","0303","5600","3900","0404","9900",
+            "05",
+            "0004","0007","0002","0001","0000"
+        ])),
+    ])
+
+# ── TC-CON: Constraint & Boundary Conditions ─────────────────────────────────
+print("\n------------------------------------------------------------")
+print(" TC-CON: Constraint & Boundary Conditions (SCRUM-36)")
+print("------------------------------------------------------------")
+
+run("TC-CON-001", "Data memory overflow — ERROR E032 at 101 data slots",
+    "TC-CON-001.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error E032 reported", expect_output_contains("e032")),
+        ("Memory limit mentioned", lambda c,o,f: "memory limit" in o.lower()),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-CON-002", "Instruction memory overflow — ERROR E031 at 101 instructions",
+    "TC-CON-002.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error E031 reported", expect_output_contains("e031")),
+        ("Memory limit mentioned", lambda c,o,f: "memory limit" in o.lower()),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-CON-003", "Immediate value out of range — WARNING W005, truncated",
+    "TC-CON-003.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Warning W005 reported", lambda c,o,f: "w005" in o.lower()),
+        ("Truncated mentioned", lambda c,o,f: "truncated" in o.lower()),
+        (".hlx produced", expect_hlx_produced),
+    ])
+
 
 # ── Summary ───────────────────────────────────────────────────────────────────
 total = PASS_COUNT + FAIL_COUNT + SKIP_COUNT
@@ -545,4 +617,6 @@ if SKIP_COUNT > 0:
 
 print()
 sys.exit(0 if FAIL_COUNT == 0 else 1)
+
+
 

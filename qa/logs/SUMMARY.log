@@ -33,3 +33,71 @@ Run: 2026-03-31 | Branch: dev | BUG-002 Fixed & Verified
   Notes: BUG-002 fixed by dev team — TC-BLOCK-005 now PASS
          Unit tests grew from 43 to 48 — devs added 5 new tests
 ------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Sprint 4 Final (waiting on team response)
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 39 PASSED  |  1 FAILED  |   0 SKIPPED  |  40 TOTAL
+  Notes: TC-BLOCK-001 to 009 — new .BLOCK syntax and indexed access (SCRUM-59)
+         TC-CON-001/002/003 — memory boundary checks (SCRUM-36)
+         TC-BLOCK-007 FAIL intentional — tracks PENDING-001 (ARR[i] .DATA not implemented)
+         TC-BLOCK-010 pending — waiting team response on =1=2=3 vs =1,=2,=3 syntax
+         BUG-001 verified fixed | BUG-002 verified fixed
+         Error handling verified — TC-ERR-001 to 005 all pass
+         EDGE-020 fixed — new .BLOCK syntax
+         NOTE-001 flagged — syntax discrepancy in SCRUM-59 card
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 23:01:31 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-03-31 23:02:31 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-03-31 23:15:16 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Note: TC-CON-003 reference comparison FAIL is intentional
+  Our assembler: SETI =100 → WARNING W005 + truncates to 2400
+  Reference:     SETI =100 → no warning + keeps full value 24100
+  This is a design difference — our assembler is stricter (warns user)
+  Total intentional reference failures now: 4
+  (TC-PAR-003, TC-DIR-001c, TC-DIR-006, TC-CON-003)
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Sprint 4 Complete
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 39 PASSED  |  1 FAILED  |   0 SKIPPED  |  40 TOTAL
+  Reference  (run_tests.sh):                25 PASSED  |  4 FAIL (intentional)  |  0 BLOCKED
+  Notes: NOTE-001 resolved — dev lead confirmed =1,=2,=3 is correct syntax
+         DISC-005 added — TC-CON-003 reference diff is intentional design
+         TC-BLOCK-007 still FAIL — PENDING-001 (ARR[i] .DATA) awaiting dev
+         All cards tested: SCRUM-36, SCRUM-59, error handling, regression
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-01 02:07:12 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:11:03 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:12:33 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:17:49 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
