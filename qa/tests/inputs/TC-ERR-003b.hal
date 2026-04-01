@@ -1,0 +1,8 @@
+        .ALLOC 3
+x .DATA =1
+        .BEGIN
+LOAD    undefined1
+LOAD    undefined2
+LOAD    undefined3
+HALT
+        .END

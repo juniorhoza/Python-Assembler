@@ -349,7 +349,7 @@ run("TC-SYM-006", "Location counter — 5 instructions at sequential addresses",
     ])
 
 
-# ── TC-GEN and TC-ERR: Pending Sprint 3 ──────────────────────────────────────
+# ── TC-GEN and TC-ERR: Sprint 3 ──────────────────────────────────────
 print("\n------------------------------------------------------------")
 print(" TC-GEN: Code Generation & Output")
 print("------------------------------------------------------------")
@@ -434,6 +434,16 @@ run("TC-ERR-003", "Multiple non-fatal errors all reported in one run",
         ("First error reported", lambda c,o,f: "undefined_var1" in o.lower()),
         ("Second error reported", lambda c,o,f: "undefined_var2" in o.lower()),
         ("Both errors in same run", lambda c,o,f: o.lower().count("e030") >= 2),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
+run("TC-ERR-003b", "Aggregated error reporting — 3 errors all collected before stopping",
+    "TC-ERR-003b.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("First error reported", lambda c,o,f: "undefined1" in o.lower()),
+        ("Second error reported", lambda c,o,f: "undefined2" in o.lower()),
+        ("Third error reported", lambda c,o,f: "undefined3" in o.lower()),
+        ("All 3 E030 errors in same run", lambda c,o,f: o.lower().count("e030") >= 3),
         ("No .hlx produced", expect_no_hlx),
     ])
 

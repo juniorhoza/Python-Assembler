@@ -101,3 +101,8 @@ Run: 2026-04-01 02:17:49 | Branch: dev | Commit: c630fdd
 PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
 Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
 
+------------------------------------------------------------
+Note: 2026-03-31 — Added TC-ERR-003b for explicit aggregated error handling test
+  TC-ERR-003b: 3 errors collected in one run — PASS
+  Total now: 40 PASSED | 1 FAILED (PENDING-001) | 0 SKIPPED | 41 TOTAL
+------------------------------------------------------------
