@@ -106,3 +106,40 @@ Note: 2026-03-31 — Added TC-ERR-003b for explicit aggregated error handling te
   TC-ERR-003b: 3 errors collected in one run — PASS
   Total now: 40 PASSED | 1 FAILED (PENDING-001) | 0 SKIPPED | 41 TOTAL
 ------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-01 14:30:18 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 14:37:53 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 14:38:49 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 15:09:51 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 15:14:45 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 17:07:06 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 | Branch: dev | PENDING-001 Resolved
+  SRS Tests (test_hlx_assembler_improved): 41 PASSED | 0 FAILED | 0 SKIPPED | 41 TOTAL
+  Notes: TC-BLOCK-007 now PASS — STORE ARR[i] implemented by dev team
+         Syntax changed from ARR[i] .DATA =val to STORE ARR[i]
+         All 41 tests passing, 0 open bugs, 0 skipped
+------------------------------------------------------------

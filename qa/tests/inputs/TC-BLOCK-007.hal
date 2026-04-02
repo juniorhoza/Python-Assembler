@@ -3,6 +3,7 @@ ARR .BLOCK =4,=7,=2
 i .DATA =1
 val .DATA =99
         .BEGIN
-ARR[i] .DATA =99
+LOAD    val
+STORE   ARR[i]
 HALT
         .END

@@ -545,11 +545,16 @@ run("TC-BLOCK-006", ".BLOCK variable index LOAD ARR[i] — dynamic array access"
         ])),
     ])
 
-run("TC-BLOCK-007", "PENDING-001 — ARR[i] .DATA element set not yet implemented",
+run("TC-BLOCK-007", "STORE ARR[i] — indexed element set via variable index (PENDING-001 resolved)",
     "TC-BLOCK-007.hal", [
         ("Exits with code 0", lambda c,o,f: c == 0),
-        ("No E006 error", lambda c,o,f: "e006" not in o.lower()),
         ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "07",
+            "0304","3500","5500","0303","5600","4000","9900",
+            "05",
+            "0004","0007","0002","0001","0099"
+        ])),
     ])
 
 run("TC-BLOCK-008", ".BLOCK dynamic array loop — LOAD ARR[i] with INCR/STORE pattern",

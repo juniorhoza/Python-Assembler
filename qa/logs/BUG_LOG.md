@@ -194,7 +194,7 @@ Multi-value blocks (e.g. `ARR .BLOCK =4,=7,=2`) are correctly registered in the 
 |---|---|
 | **ID** | PENDING-001 |
 | **Severity** | Medium |
-| **Status** | Open — Pending dev implementation |
+| **Status** | ✅ Resolved — STORE ARR[i] implemented. Verified 2026-04-01 |
 | **Date** | 2026-03-31 |
 | **Tester** | Ruxandra Flueras |
 
