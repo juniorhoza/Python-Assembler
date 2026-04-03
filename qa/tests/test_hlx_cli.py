@@ -43,6 +43,16 @@ print("="*60)
 #         results.append((tc_id, "FAIL", description, "; ".join(failures)))
 #         FAIL_COUNT += 1
 
+
+# TC-CLI-001 through TC-CLI-007 already exist in test_hlx_unit.py
+#CLI-001 — --help flag returns exit code 0
+#CLI-002 — --help output contains usage info
+#CLI-003 — no arguments returns exit code 1
+#CLI-004 — wrong extension (.txt) returns exit code 2
+#CLI-005 — non-existent file returns exit code 3
+#CLI-006 — valid .hal file returns exit code 0
+#CLI-007 — file missing .END returns non-zero
+
 # TC-CLI-008: Custom output basename -o
 for f in ["/tmp/TC-CLI-008-custom.hlx", "/tmp/TC-CLI-008-custom.hll"]:
     if os.path.isfile(f): os.remove(f)
