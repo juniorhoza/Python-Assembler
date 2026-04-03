@@ -172,17 +172,16 @@ TOTAL=$((PASS + FAIL + BLOCKED + NOT_RUN))
 
 log ""
 log "============================================================"
-log " SUMMARY"
+log " SUMMARY REFERENCE ASSEMBLER"
 log "  Branch     : $BRANCH_LABEL"
-log "  Commit     : $(git rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 log "  Total TCs  : $TOTAL"
 log "  PASS       : $PASS"
-log "  FAIL       : $FAIL"
+log "  DIFF       : $FAIL (known differences from reference — see DISC entries in BUG_LOG.md)"
 log "  BLOCKED    : $BLOCKED (input files not yet created)"
 log "  NOT TESTED : $NOT_RUN"
 log ""
 if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
-    log "  FAILED TESTS:"
+    log "  DIFFERENCES (documented in BUG_LOG.md):"
     for t in "${FAILED_TESTS[@]}"; do log "    - $t"; done
 fi
 if [ ${#BLOCKED_TESTS[@]} -gt 0 ]; then

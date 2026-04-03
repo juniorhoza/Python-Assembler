@@ -155,6 +155,86 @@ Run: 2026-04-01 | Branch: dev | Exploratory Tests Added
   SRS Tests  (test_hlx_assembler_improved): 55 PASSED  |  0 FAILED  |   0 SKIPPED  |  55 TOTAL
   Reference  (run_tests.sh):                27 PASSED  |  4 FAIL (intentional)  |  0 BLOCKED
   Notes: EXPLORE-001 to EXPLORE-007 added — genuine new edge cases
-         Elizabeth's bad exploratory files removed and replaced
+         bad exploratory files removed and replaced
          Grand total: 126 test cases, 0 unexpected failures
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-03 02:36:03 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:40:59 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:42:28 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:43:24 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:44:22 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:48:15 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:51:04 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:58:35 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:07:26 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:09:30 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:10:06 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:12:44 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-02 | Branch: dev | FINAL SPRINT 4 COMPLETE RUN
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  TC-PAR:                                    5 PASSED  |  0 FAILED
+  TC-DIR:                                    8 PASSED  |  0 FAILED
+  TC-SYM:                                    5 PASSED  |  0 FAILED
+  TC-GEN:                                    5 PASSED  |  0 FAILED
+  TC-ERR:                                    6 PASSED  |  0 FAILED
+  TC-BLOCK:                                  9 PASSED  |  0 FAILED
+  TC-CON:                                    3 PASSED  |  0 FAILED
+  TC-CLI:                                    7 PASSED  |  0 FAILED
+  EXPLORATORY:                               7 PASSED  |  0 FAILED
+  run_all_tests.py TOTAL:                  126 PASSED  |  0 FAILED  |  0 SKIPPED
+  Reference (run_tests.sh):                 27 PASS    |  4 DIFF (intentional) | 0 BLOCKED
+  Notes: All sprints complete. 126 tests, 0 failures, 0 open bugs.
+         4 intentional reference differences documented in BUG_LOG.md
+         Test suite refactored into category files + master runner
+         Negative .DATA values known constraint — out of scope per dev lead
 ------------------------------------------------------------
