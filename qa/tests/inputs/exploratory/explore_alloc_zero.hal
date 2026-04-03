@@ -1,0 +1,4 @@
+        .ALLOC 0
+        .BEGIN
+HALT
+        .END
