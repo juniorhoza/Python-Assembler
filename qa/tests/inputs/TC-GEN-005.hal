@@ -1,0 +1,16 @@
+# TC-GEN-005: Forward reference resolved in Pass 2
+# FR-GEN-005: Labels used before definition resolve correctly
+# Expected: DONE resolves to correct address, no errors
+        .ALLOC 2
+x .DATA =1
+limit .DATA =10
+        .BEGIN
+LOOP:   LOAD    x
+        CGT     limit
+        BRT     DONE
+        INCR
+        STORE   x
+        BRANCH  LOOP
+DONE:   WRITE   x
+        HALT
+        .END

@@ -1,0 +1,13 @@
+        .ALLOC 4
+a .DATA =3
+b .DATA =4
+c .DATA
+d .DATA
+        .BEGIN
+READ    c
+LOAD    c
+MULT    a
+STORE   d
+WRITE   d
+HALT
+        .END

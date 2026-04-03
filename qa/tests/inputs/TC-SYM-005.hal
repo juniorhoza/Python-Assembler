@@ -1,0 +1,25 @@
+# TC-SYM-005: Opcode table lookup
+# FR-SYM-005: Assembler maintains opcode table mapping mnemonics to opcodes
+# Tests a representative sample of instruction groups
+# Expected: Each mnemonic encoded with correct opcode, assembly succeeds
+        .ALLOC 5
+a .DATA =1
+b .DATA =2
+c .DATA =0
+n .DATA =5
+        .BEGIN
+READ    a
+LOAD    a
+ADD     b
+SUB     b
+MULT    b
+DIV     b
+STORE   c
+WRITE   c
+INCR
+DECR
+CLEAR
+BRT     DONE
+BRANCH  DONE
+DONE:   HALT
+        .END

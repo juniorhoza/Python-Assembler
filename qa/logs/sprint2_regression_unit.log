@@ -1,0 +1,106 @@
+
+============================================================
+ SECTION 1: LEXER TESTS
+============================================================
+  PASS  LEX-001  Directive .ALLOC produces DIRECTIVE token
+  PASS  LEX-002  Instruction LOAD produces MNEMONIC token
+  PASS  LEX-003  Immediate value =3 produces IMMEDIATE token
+  PASS  LEX-004  Comment not included when keep_comments=False
+  PASS  LEX-005  Comment included when keep_comments=True
+  PASS  LEX-006  Invalid character @ raises LexicalError
+  PASS  LEX-007  Blank line produces no tokens
+  PASS  LEX-008  Comment-only line produces one COMMENT token
+  PASS  LEX-009  Numeric operand produces NUMBER token
+  PASS  LEX-010  Token records correct line number
+  PASS  LEX-011  tokenize_source handles multiple lines
+  PASS  LEX-012  .Block directive produces DIRECTIVE token
+
+============================================================
+ SECTION 2: PARSER TESTS
+============================================================
+  PASS  PAR-001  Valid .ALLOC parsed as DIRECTIVE statement
+  PASS  PAR-002  Valid .BEGIN parsed as DIRECTIVE statement
+  PASS  PAR-003  Valid .END parsed as DIRECTIVE statement
+  PASS  PAR-004  Valid .DATA parsed as DIRECTIVE statement
+  PASS  PAR-005  .BLOCK directive parsed as DIRECTIVE statement
+  PASS  PAR-006  HALT parsed as INSTRUCTION statement
+  PASS  PAR-007  LOAD x parsed with correct operand
+  PASS  PAR-008  Unknown directive .BADDIR raises ParserError
+  PASS  PAR-009  .ALLOC with non-numeric operand raises ParserError
+  PASS  PAR-010  .BLOCK with no operands raises ParserError
+  PASS  PAR-011  .BLOCK with size 0 raises ParserError
+  PASS  PAR-012  Label SKIP: on instruction parsed correctly
+
+============================================================
+ SECTION 3: PROGRAM STRUCTURE TESTS
+============================================================
+  PASS  STR-001  Valid program structure passes with no errors
+  PASS  STR-002  Missing .BEGIN detected with error E002
+  PASS  STR-003  Missing .END detected with error E003
+  PASS  STR-004  .ALLOC after .DATA detected as error
+  PASS  STR-005  .DATA after .BEGIN detected as error
+  PASS  STR-006  .BLOCK after .BEGIN detected as error
+  FAIL  STR-007  Multiple .ALLOC produces W004 warning not error
+        Reason: Expected ok=True for multiple .ALLOC (warning only), got errors: ['Multiple .ALLOC directives at lines [1, 3]. Only one .ALLOC directive is allowed.']
+  PASS  STR-008  Directive after .END detected as error
+  PASS  STR-009  .BEGIN before .END passes ordering check
+  PASS  STR-010  .BLOCK before .BEGIN is valid — no errors
+  PASS  STR-011  HALT with operand detected as error E024
+  PASS  STR-012  SETI without = prefix detected as error E022
+
+============================================================
+ SECTION 4: CLI ARGUMENT TESTS
+============================================================
+  PASS  CLI-001  --help flag returns exit code 0
+  PASS  CLI-002  --help output contains usage information
+  PASS  CLI-003  No arguments returns exit code 1
+  PASS  CLI-004  Wrong file extension (.txt) returns exit code 2
+  PASS  CLI-005  Non-existent .hal file returns exit code 3
+  PASS  CLI-006  Valid .hal file returns exit code 0
+  PASS  CLI-007  File missing .END returns non-zero exit code
+
+============================================================
+ RESULTS:  42 PASSED  |  1 FAILED  |  43 TOTAL
+============================================================
+
+ FAILED TESTS:
+   STR-007: Multiple .ALLOC produces W004 warning not error
+          Expected ok=True for multiple .ALLOC (warning only), got errors: ['Multiple .ALLOC directives at lines [1, 3]. Only one .ALLOC directive is allowed.']
+
+DEBUG: Lexer loaded from services.lexer
+
+============================================================
+ SECTION 1: REAL STUDENT FILE PATTERNS
+============================================================
+  PASS  EDGE-001  .ALLOC with tab spacing (seen in mcnairA799, millerI558)
+  PASS  EDGE-002  Duplicate variable name accepted by parser (Pass 1 scope)
+  PASS  EDGE-003  Labels IF/ELSE/ENDIF on instructions parsed correctly (add2or3 pattern)
+  PASS  EDGE-004  Two HALT instructions before .END both parsed (crawfordJ558 pattern)
+  PASS  EDGE-005  .DATA with value missing = prefix raises ParserError (starksL369 pattern)
+  PASS  EDGE-006  .DATA=0 with no space raises error (starksL369 pattern)
+  PASS  EDGE-007  'ALLOC. 3' (dot after word) raises LexicalError (mooreA953 pattern)
+  PASS  EDGE-008  Many blank lines between sections parsed correctly
+  PASS  EDGE-009  Inline comment on instruction line ignored correctly
+  PASS  EDGE-010  .ALLOC size larger than .DATA count accepted (wagnerO393 pattern)
+  PASS  EDGE-011  BRANCH with label operand parsed correctly (add2or3 pattern)
+  PASS  EDGE-012  ADDI =5 immediate instruction parsed correctly (countBy5 pattern)
+  PASS  EDGE-013  Heavy comment header before .ALLOC parsed correctly
+  PASS  EDGE-014  BRF with label operand parsed correctly (bahidikaD374 pattern)
+  PASS  EDGE-015  Long instruction sequence (3powers pattern) parsed correctly
+
+============================================================
+ SECTION 2: STRUCTURAL EDGE CASES
+============================================================
+  PASS  EDGE-016  Minimal program with only .BEGIN and .END is valid
+  PASS  EDGE-017  .ALLOC after .BEGIN detected as error
+  PASS  EDGE-018  Multiple .BEGIN produces W002 warning not error
+  PASS  EDGE-019  Multiple .END produces W003 warning not error
+  PASS  EDGE-020  .BLOCK with initializer values =1,2,3 parsed correctly
+  PASS  EDGE-021  .BLOCK with more values than size raises ParserError
+  PASS  EDGE-022  CEQ instruction with operand parsed correctly (add2or3 pattern)
+  PASS  EDGE-023  CLE instruction with operand parsed correctly (countBy5 pattern)
+
+============================================================
+ RESULTS:  23 PASSED  |  0 FAILED  |  23 TOTAL
+============================================================
+

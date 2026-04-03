@@ -1,0 +1,19 @@
+# TC-SYM-001: Symbol table built in Pass 1
+# Expected: All 5 labels in symbol table with correct addresses
+        .ALLOC 3
+x .DATA =1
+y .DATA =2
+z .DATA =0
+        .BEGIN
+START:  LOAD x
+        ADD y
+        STORE z
+CHECK:  CGT z
+        BRT DONE
+LOOP:   LOAD x
+        INCR
+        STORE x
+        BRANCH LOOP
+DONE:   WRITE z
+        HALT
+        .END

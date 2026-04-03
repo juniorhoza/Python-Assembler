@@ -1,0 +1,6 @@
+        .ALLOC 2
+X .DATA =5
+x .DATA =3
+        .BEGIN
+HALT
+        .END

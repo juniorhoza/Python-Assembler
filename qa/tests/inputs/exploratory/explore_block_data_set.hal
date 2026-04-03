@@ -1,0 +1,7 @@
+        .ALLOC 4
+ARR .BLOCK =4,=7,=2
+ARR[1] .DATA =99
+n .DATA =0
+        .BEGIN
+HALT
+        .END

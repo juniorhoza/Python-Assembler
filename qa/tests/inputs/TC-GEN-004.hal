@@ -1,0 +1,9 @@
+# TC-GEN-004: .hll listing file produced
+# FR-GEN-004: Assembler produces .hll file with source + binary
+# Expected: TC-GEN-004.hll file created after assembly
+        .ALLOC 1
+n .DATA =7
+        .BEGIN
+WRITE   n
+HALT
+        .END

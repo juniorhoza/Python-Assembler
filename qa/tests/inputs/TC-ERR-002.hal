@@ -1,0 +1,8 @@
+# TC-ERR-002: Each error type has a unique error code
+# FR-ERR-002: Error messages have unique codes (E001, E002 etc.)
+# Expected: Error output contains a unique error code like E004, E003 etc.
+x .DATA =1
+        .ALLOC 2
+        .BEGIN
+HALT
+        .END

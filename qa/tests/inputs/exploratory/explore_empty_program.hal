@@ -1,0 +1,4 @@
+        .ALLOC 1
+x .DATA =0
+        .BEGIN
+        .END

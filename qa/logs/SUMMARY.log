@@ -1,0 +1,240 @@
+------------------------------------------------------------
+Run: 2026-03-23 | Branch: dev | Commit: 94095de | Full Suite
+  Unit Tests (test_hlx_unit.py):           43 PASSED  |  0 FAILED  |  43 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):     23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests (test_hlx_assembler_improved): 18 PASSED  |  0 FAILED  |  10 SKIPPED  |  28 TOTAL
+  Reference Comparison (run_tests.sh):     20 PASSED  |  3 FAIL (intentional)  |  8 BLOCKED
+  Notes: 3 reference failures are intentional (.BLOCK support, duplicate .ALLOC behavior)
+         10 skipped tests pending Sprint 3 dev implementation
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Commit: ea3a6f6 | Post-PR#6 Regression
+  Unit Tests (test_hlx_unit.py):            43 PASSED  |  0 FAILED  |  43 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      22 PASSED  |  1 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 28 PASSED  |  0 FAILED  |   0 SKIPPED
+  Notes: EDGE-020 FAILED — .BLOCK initializer syntax changed by devs (SCRUM-59)
+         Old format: x .BLOCK 5 =1,2,3  New format: x .BLOCK =1=2=3
+         All other 93 tests still passing — no regressions from PR#6
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Commit: ea3a6f6 | Sprint 4 SCRUM-59
+  Unit Tests (test_hlx_unit.py):            43 PASSED  |  0 FAILED  |  43 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 32 PASSED  |  1 FAILED  |   0 SKIPPED  |  33 TOTAL
+  Notes: TC-BLOCK-001 to 004 new SCRUM-59 tests all PASS
+         TC-BLOCK-005 FAIL intentional — documents BUG-002 (single-value .BLOCK indexed access)
+         EDGE-020 fixed — new .BLOCK syntax =v1,=v2,=v3
+         BUG-002 reported to dev team, pending fix
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | BUG-002 Fixed & Verified
+  SRS Tests (test_hlx_assembler_improved): 33 PASSED | 0 FAILED | 0 SKIPPED | 33 TOTAL
+  Unit Tests (test_hlx_unit.py):           48 PASSED | 0 FAILED
+  Edge Cases (test_hlx_edge_cases.py):     23 PASSED | 0 FAILED
+  Notes: BUG-002 fixed by dev team — TC-BLOCK-005 now PASS
+         Unit tests grew from 43 to 48 — devs added 5 new tests
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Sprint 4 Final (waiting on team response)
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 39 PASSED  |  1 FAILED  |   0 SKIPPED  |  40 TOTAL
+  Notes: TC-BLOCK-001 to 009 — new .BLOCK syntax and indexed access (SCRUM-59)
+         TC-CON-001/002/003 — memory boundary checks (SCRUM-36)
+         TC-BLOCK-007 FAIL intentional — tracks PENDING-001 (ARR[i] .DATA not implemented)
+         TC-BLOCK-010 pending — waiting team response on =1=2=3 vs =1,=2,=3 syntax
+         BUG-001 verified fixed | BUG-002 verified fixed
+         Error handling verified — TC-ERR-001 to 005 all pass
+         EDGE-020 fixed — new .BLOCK syntax
+         NOTE-001 flagged — syntax discrepancy in SCRUM-59 card
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 23:01:31 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-03-31 23:02:31 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-03-31 23:15:16 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Note: TC-CON-003 reference comparison FAIL is intentional
+  Our assembler: SETI =100 → WARNING W005 + truncates to 2400
+  Reference:     SETI =100 → no warning + keeps full value 24100
+  This is a design difference — our assembler is stricter (warns user)
+  Total intentional reference failures now: 4
+  (TC-PAR-003, TC-DIR-001c, TC-DIR-006, TC-CON-003)
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-03-31 | Branch: dev | Sprint 4 Complete
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 39 PASSED  |  1 FAILED  |   0 SKIPPED  |  40 TOTAL
+  Reference  (run_tests.sh):                25 PASSED  |  4 FAIL (intentional)  |  0 BLOCKED
+  Notes: NOTE-001 resolved — dev lead confirmed =1,=2,=3 is correct syntax
+         DISC-005 added — TC-CON-003 reference diff is intentional design
+         TC-BLOCK-007 still FAIL — PENDING-001 (ARR[i] .DATA) awaiting dev
+         All cards tested: SCRUM-36, SCRUM-59, error handling, regression
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-01 02:07:12 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:11:03 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:12:33 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 02:17:49 | Branch: dev | Commit: c630fdd
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Note: 2026-03-31 — Added TC-ERR-003b for explicit aggregated error handling test
+  TC-ERR-003b: 3 errors collected in one run — PASS
+  Total now: 40 PASSED | 1 FAILED (PENDING-001) | 0 SKIPPED | 41 TOTAL
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-01 14:30:18 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 14:37:53 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 14:38:49 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 15:09:51 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 15:14:45 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 17:07:06 | Branch: dev | Commit: 0c7fa13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 | Branch: dev | PENDING-001 Resolved
+  SRS Tests (test_hlx_assembler_improved): 41 PASSED | 0 FAILED | 0 SKIPPED | 41 TOTAL
+  Notes: TC-BLOCK-007 now PASS — STORE ARR[i] implemented by dev team
+         Syntax changed from ARR[i] .DATA =val to STORE ARR[i]
+         All 41 tests passing, 0 open bugs, 0 skipped
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-03 01:13:10 | Branch: dev | Commit: 150bc13
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-01 | Branch: dev | Exploratory Tests Added
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  SRS Tests  (test_hlx_assembler_improved): 55 PASSED  |  0 FAILED  |   0 SKIPPED  |  55 TOTAL
+  Reference  (run_tests.sh):                27 PASSED  |  4 FAIL (intentional)  |  0 BLOCKED
+  Notes: EXPLORE-001 to EXPLORE-007 added — genuine new edge cases
+         bad exploratory files removed and replaced
+         Grand total: 126 test cases, 0 unexpected failures
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-03 02:36:03 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:40:59 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:42:28 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:43:24 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:44:22 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:48:15 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:51:04 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 02:58:35 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:07:26 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:09:30 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:10:06 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 03:12:44 | Branch: dev | Commit: 09ca8e1
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-02 | Branch: dev | FINAL SPRINT 4 COMPLETE RUN
+  Unit Tests (test_hlx_unit.py):            48 PASSED  |  0 FAILED  |  48 TOTAL
+  Edge Cases (test_hlx_edge_cases.py):      23 PASSED  |  0 FAILED  |  23 TOTAL
+  TC-PAR:                                    5 PASSED  |  0 FAILED
+  TC-DIR:                                    8 PASSED  |  0 FAILED
+  TC-SYM:                                    5 PASSED  |  0 FAILED
+  TC-GEN:                                    5 PASSED  |  0 FAILED
+  TC-ERR:                                    6 PASSED  |  0 FAILED
+  TC-BLOCK:                                  9 PASSED  |  0 FAILED
+  TC-CON:                                    3 PASSED  |  0 FAILED
+  TC-CLI:                                    7 PASSED  |  0 FAILED
+  EXPLORATORY:                               7 PASSED  |  0 FAILED
+  run_all_tests.py TOTAL:                  126 PASSED  |  0 FAILED  |  0 SKIPPED
+  Reference (run_tests.sh):                 27 PASS    |  4 DIFF (intentional) | 0 BLOCKED
+  Notes: All sprints complete. 126 tests, 0 failures, 0 open bugs.
+         4 intentional reference differences documented in BUG_LOG.md
+         Test suite refactored into category files + master runner
+         Negative .DATA values known constraint — out of scope per dev lead
+------------------------------------------------------------

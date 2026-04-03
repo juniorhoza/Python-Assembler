@@ -1,0 +1,55 @@
+
+============================================================
+ HLX ASSEMBLER - SRS-BASED END-TO-END TESTS
+============================================================
+
+------------------------------------------------------------
+ TC-PAR: Parsing & Recognition
+------------------------------------------------------------
+  [92mPASS[0m  TC-PAR-001  Valid HLX syntax assembles without errors
+  [92mPASS[0m  TC-PAR-002  All core directives recognised (.alloc .data .begin .end)
+  [92mPASS[0m  TC-PAR-003  .Block directive recognised — MYARR in symbol table
+  [92mPASS[0m  TC-PAR-004  Invalid directive .ENDING causes error with line number
+  [92mPASS[0m  TC-PAR-005  Forward reference label SKIP resolves correctly
+
+------------------------------------------------------------
+ TC-DIR: Directive & Semantic Rules
+------------------------------------------------------------
+  [92mPASS[0m  TC-DIR-001a  .alloc is first statement — assembly succeeds
+  [92mPASS[0m  TC-DIR-001b  .alloc NOT first — error, assembly halts
+  [92mPASS[0m  TC-DIR-001c  .alloc appears twice — SRS says error (discrepancy: dev uses warning)
+  [92mPASS[0m  TC-DIR-002  Program starts with .begin (no .alloc) — assembler runs and reports issues
+  [92mPASS[0m  TC-DIR-003a  .end is last statement — assembly succeeds
+  [92mPASS[0m  TC-DIR-003b  .end missing — error, assembly halts
+  [92mPASS[0m  TC-DIR-003c  Statements after .end — error detected
+  [92mPASS[0m  TC-DIR-006  .Block allocates correct memory — MYARR at correct base address
+
+------------------------------------------------------------
+ TC-SYM: Symbol Management
+------------------------------------------------------------
+  [92mPASS[0m  TC-SYM-001  Symbol table built — all labels with correct addresses
+  [92mPASS[0m  TC-SYM-002  Duplicate label LOOP — assembler detects and reports it
+  [92mPASS[0m  TC-SYM-003  Undefined label MISSING — assembler detects and reports it
+
+------------------------------------------------------------
+ TC-GEN: Code Generation & Output
+------------------------------------------------------------
+  [92mPASS[0m  TC-GEN-001  Correct machine code generated for each instruction
+  [92mPASS[0m  TC-GEN-002  Instructions appear before data in .hlx output
+  [92mPASS[0m  TC-GEN-003  .hlx output file produced with correct name
+  [92mPASS[0m  TC-GEN-004  .hll listing file produced
+  [92mPASS[0m  TC-GEN-005  Forward reference DONE resolves to correct address
+
+------------------------------------------------------------
+ TC-ERR: Error Handling
+------------------------------------------------------------
+  [92mPASS[0m  TC-ERR-001  Error output includes filename and line number
+  [92mPASS[0m  TC-ERR-002  Error has unique error code (e.g. E004)
+  [92mPASS[0m  TC-ERR-003  Multiple non-fatal errors all reported in one run
+  [92mPASS[0m  TC-ERR-004  Fatal error halts assembly — no output files produced
+  [92mPASS[0m  TC-ERR-005  Exit code 0 on success, non-zero on error
+
+============================================================
+ RESULTS:  26 PASSED  |  0 FAILED  |  0 SKIPPED  |  26 TOTAL
+============================================================
+
