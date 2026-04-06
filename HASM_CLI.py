@@ -412,8 +412,8 @@ def main():
     print(f"Program structure OK [{source_file}].")
 
     # ------------------------------------------------------------------
-    # Step 5b: Lower dynamic indexed operands like ARR[i] to Halix
-    # indexed-address instruction sequences before pass 1 / pass 2.
+    # Step 5b: Reject non-PDF indexed operand sugar like ARR[i].
+    # Halix v25 uses explicit base-index instructions (LOADA, iLOAD, iSTORE, ...).
     # ------------------------------------------------------------------
     statements, lowering_errors = lower_dynamic_index_operands(statements)
     if lowering_errors:

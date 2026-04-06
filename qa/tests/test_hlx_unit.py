@@ -61,7 +61,8 @@ OPCODES = {
     "BRT", "BRF", "BSUB", "SETI", "ADDI", "SUBI", "MULTI", "DIVI", "MODI",
     "LOADA", "MOVEB", "MOVEA", "ILOAD", "ISTORE", "IADD", "ISUB", "IMULT",
     "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ", "ICNE", "ICGE", "ICGT", "IREAD",
-    "IWRITE", "IINCR", "IDECR",
+    "IWRITE", "IINCR", "IDECR", "ICLR", "SHINDX", "SHBASE", "IMOVEA",
+    "STOREA", "STOREB",
 }
 
 def make_statements(source: str):
@@ -132,6 +133,17 @@ def test_lex_006():
     assert "ARR[I]" in values, f"Expected ARR[I] operand token, got {values}"
 
 run("LEX-006", "Dynamic indexed operand ARR[i] tokenized", test_lex_006)
+
+
+def test_lex_007():
+    """Negative number and immediate tokens recognized"""
+    tokens = tokenize_line("X .DATA =-5", 1, opcode_mnemonics=OPCODES)
+    values = [t.value for t in tokens]
+    types = [t.token_type for t in tokens]
+    assert "=-5" in values, f"Expected immediate token '=-5', got {values}"
+    assert "IMMEDIATE" in types, f"Expected IMMEDIATE token, got {types}"
+
+run("LEX-007", "Negative immediate tokenized correctly", test_lex_007)
 
 
 def test_lex_006():
@@ -331,62 +343,58 @@ run("PAR-012", "Label SKIP: on instruction parsed correctly", test_par_012)
 
 
 def test_par_013():
-    """Dynamic indexed operand parsed on instruction"""
+    """Explicit PDF block instruction parsed"""
     stmts = make_statements(
-        "        .ALLOC 4\nARR .BLOCK 3\nI .DATA =1\n        .BEGIN\nLOAD ARR[i]\nHALT\n        .END"
+        "        .ALLOC 4\nARR .BLOCK 3\n        .BEGIN\niLOAD\nHALT\n        .END"
     )
-    loads = [s for s in stmts if s.kind == "INSTRUCTION" and s.mnemonic == "LOAD"]
-    assert len(loads) == 1, f"Expected one LOAD, got {len(loads)}"
-    assert loads[0].operands == ["ARR[I]"], f"Expected operand ARR[I], got {loads[0].operands}"
+    iloads = [s for s in stmts if s.kind == "INSTRUCTION" and s.mnemonic == "ILOAD"]
+    assert len(iloads) == 1, f"Expected one ILOAD, got {len(iloads)}"
+    assert iloads[0].operands == [], f"Expected no operands, got {iloads[0].operands}"
 
-run("PAR-013", "LOAD ARR[i] parsed with dynamic indexed operand", test_par_013)
+run("PAR-013", "iLOAD parsed as explicit PDF block instruction", test_par_013)
 
 
 def test_par_014():
-    """Dynamic indexed operand lowers to indexed Halix sequence"""
+    """Non-PDF dynamic indexed syntax rejected by lowering stage"""
     stmts = make_statements(
         "        .ALLOC 4\nARR .BLOCK 3\nI .DATA =1\n        .BEGIN\nTOP: LOAD ARR[i]\nHALT\n        .END"
     )
     lowered, errors = lower_dynamic_index_operands(stmts)
-    assert not errors, f"Expected no lowering errors, got {[str(e) for e in errors]}"
-    code = [s for s in lowered if s.kind == "INSTRUCTION"]
-    mnemonics = [s.mnemonic for s in code]
-    assert mnemonics[:6] == ["LOADA", "MOVEB", "LOAD", "MOVEA", "ILOAD", "HALT"], \
-        f"Unexpected lowered mnemonics: {mnemonics}"
-    assert code[0].label == "TOP", f"Expected label TOP on first lowered instruction, got {code[0].label}"
+    assert errors, "Expected lowering error for non-PDF indexed syntax"
+    assert "not part of the Halix v25 instruction set" in str(errors[0]), f"Unexpected error: {errors[0]}"
+    assert lowered == stmts, "Statements should remain unchanged when syntax is rejected"
 
-run("PAR-014", "Dynamic indexed operand lowers to indexed instruction sequence", test_par_014)
+run("PAR-014", "LOAD ARR[i] rejected in favor of explicit PDF block instructions", test_par_014)
 
 
 def test_par_015():
-    """Lowered dynamic indexed operand encodes to expected machine words"""
+    """Explicit PDF base-index sequence encodes to expected machine words"""
     source = (
         "        .ALLOC 4\n"
         "ARR .BLOCK 3\n"
-        "I .DATA =1\n"
         "        .BEGIN\n"
-        "LOAD ARR[i]\n"
+        "LOADA ARR\n"
+        "iCLR\n"
+        "iLOAD\n"
         "HALT\n"
         "        .END\n"
     )
     lines = source.strip().splitlines(keepends=True)
     tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
     stmts = parse_tokens(tokens, total_lines=len(lines))
-    lowered, errors = lower_dynamic_index_operands(stmts)
-    assert not errors, f"Expected no lowering errors, got {[str(e) for e in errors]}"
-    pass1_result = run_pass1(lowered)
+    pass1_result = run_pass1(stmts)
     assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
     opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
-    pass2_result = run_pass2(lowered, pass1_result, opcode_table, lines)
+    pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines)
     assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
     words = [instr.machine_word for instr in pass2_result.instructions]
-    assert words == ["3500", "5500", "0303", "5600", "3900", "9900"], f"Unexpected machine words: {words}"
+    assert words == ["3500", "3600", "3900", "9900"], f"Unexpected machine words: {words}"
 
-run("PAR-015", "Dynamic indexed operand encodes through indexed instruction path", test_par_015)
+run("PAR-015", "Explicit PDF base-index instructions encode correctly", test_par_015)
 
 
 def test_par_016():
-    """Single-element .BLOCK remains indexable at [0]"""
+    """Literal indexed executable syntax is rejected by structure check"""
     source = (
         ".ALLOC 2\n"
         "ARR .BLOCK =98\n"
@@ -398,17 +406,137 @@ def test_par_016():
     lines = source.splitlines(keepends=True)
     tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
     stmts = parse_tokens(tokens, total_lines=len(lines))
+    result = check_program_structure(stmts)
+    assert not result.ok, "Expected indexed executable operand to be rejected"
+    assert any("must be an identifier" in issue.message for issue in result.errors), \
+        f"Unexpected errors: {[issue.message for issue in result.errors]}"
+
+run("PAR-016", "Executable indexed operand ARR[0] rejected in favor of PDF syntax", test_par_016)
+
+
+def test_par_017():
+    """Dynamic indexed STORE syntax rejected by lowering stage"""
+    source = (
+        ".ALLOC 4\n"
+        "ARR .BLOCK =1,=2\n"
+        "I .DATA =1\n"
+        "TMP .DATA =9\n"
+        ".BEGIN\n"
+        "LOAD TMP\n"
+        "STORE ARR[i]\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    lowered, errors = lower_dynamic_index_operands(stmts)
+    assert errors, "Expected lowering error for STORE ARR[i]"
+    assert "not part of the Halix v25 instruction set" in str(errors[0]), f"Unexpected error: {errors[0]}"
+    assert lowered == stmts, "Statements should remain unchanged when syntax is rejected"
+
+run("PAR-017", "STORE ARR[i] rejected in favor of explicit PDF block instructions", test_par_017)
+
+
+def test_par_018():
+    """Negative .DATA and .BLOCK values are accepted and preserved"""
+    source = (
+        ".ALLOC 3\n"
+        "X .DATA =-5\n"
+        "ARR .BLOCK =-1,=2\n"
+        ".BEGIN\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
     pass1_result = run_pass1(stmts)
     assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
-    arr_entry = pass1_result.data_table["ARR"]
-    assert arr_entry.is_block, "Expected ARR to be tracked as a block"
+    assert pass1_result.data_table["X"].value == "-005", f"Unexpected X value: {pass1_result.data_table['X'].value}"
+    assert pass1_result.data_table["ARR"].values == ["-001", "0002"], \
+        f"Unexpected ARR values: {pass1_result.data_table['ARR'].values}"
+
+run("PAR-018", "Negative data values preserved in pass1", test_par_018)
+
+
+def test_par_019():
+    """Negative immediate encodes without error"""
+    source = (
+        ".ALLOC 1\n"
+        "X .DATA =0\n"
+        ".BEGIN\n"
+        "SETI =-5\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    pass1_result = run_pass1(stmts)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
     opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
     pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines)
     assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
     words = [instr.machine_word for instr in pass2_result.instructions]
-    assert words == ["0300", "9900"], f"Unexpected machine words: {words}"
+    assert words == ["24-5", "9900"], f"Unexpected machine words: {words}"
 
-run("PAR-016", "Single-element .BLOCK allows indexed access at [0]", test_par_016)
+run("PAR-019", "Negative immediate assembles successfully", test_par_019)
+
+
+def test_par_020():
+    """All explicit PDF block instructions assemble successfully"""
+    source = (
+        ".ALLOC 4\n"
+        "ARR .BLOCK =1,=2\n"
+        "TMP .DATA =0\n"
+        ".BEGIN\n"
+        "LOADA ARR\n"
+        "iCLR\n"
+        "iREAD\n"
+        "iWRITE\n"
+        "iLOAD\n"
+        "iSTORE\n"
+        "iINCR\n"
+        "iDECR\n"
+        "iADD\n"
+        "iSUB\n"
+        "iMULT\n"
+        "iDIV\n"
+        "iMOD\n"
+        "iCLT\n"
+        "iCLE\n"
+        "iCEQ\n"
+        "iCNE\n"
+        "iCGE\n"
+        "iCGT\n"
+        "SHINDX\n"
+        "SHBASE\n"
+        "MOVEB\n"
+        "MOVEA\n"
+        "iMOVEA\n"
+        "STOREA TMP\n"
+        "STOREB TMP\n"
+        "HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    pass1_result = run_pass1(stmts)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
+    opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
+    pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines)
+    assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
+    mnemonics = [s.mnemonic for s in stmts if s.kind == "INSTRUCTION"]
+    assert mnemonics == [
+        "LOADA", "ICLR", "IREAD", "IWRITE", "ILOAD", "ISTORE", "IINCR", "IDECR",
+        "IADD", "ISUB", "IMULT", "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ", "ICNE",
+        "ICGE", "ICGT", "SHINDX", "SHBASE", "MOVEB", "MOVEA", "IMOVEA", "STOREA",
+        "STOREB", "HALT"
+    ], f"Unexpected mnemonic list: {mnemonics}"
+
+run("PAR-020", "All explicit PDF block instructions assemble successfully", test_par_020)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
