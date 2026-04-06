@@ -47,25 +47,6 @@ NO_OPERAND_MNEMONICS = {
 }
 BRANCH_MNEMONICS = {"BRANCH", "BRT", "BRF", "BSUB"}
 IMMEDIATE_MNEMONICS = {"SETI", "ADDI", "SUBI", "MULTI", "DIVI", "MODI"}
-INDIRECT_MNEMONIC_MAP = {
-    "READ": "IREAD",
-    "WRITE": "IWRITE",
-    "LOAD": "ILOAD",
-    "STORE": "ISTORE",
-    "INCR": "IINCR",
-    "DECR": "IDECR",
-    "ADD": "IADD",
-    "SUB": "ISUB",
-    "MULT": "IMULT",
-    "DIV": "IDIV",
-    "MOD": "IMOD",
-    "CLT": "ICLT",
-    "CLE": "ICLE",
-    "CEQ": "ICEQ",
-    "CNE": "ICNE",
-    "CGE": "ICGE",
-    "CGT": "ICGT",
-}
 
 
 @dataclass
@@ -120,6 +101,18 @@ def parse_literal_indexed_symbol(value: str) -> tuple[str, int] | None:
     return indexed[0], int(indexed[1])
 
 
+def is_integer_literal(value: str) -> bool:
+    if not value:
+        return False
+    if value[0] == "-":
+        return len(value) > 1 and value[1:].isdigit()
+    return value.isdigit()
+
+
+def is_non_negative_integer(value: str) -> bool:
+    return value.isdigit()
+
+
 def _validate_data_target(tok: Token, what: str) -> None:
     indexed = parse_literal_indexed_symbol(tok.value)
     if indexed is not None:
@@ -154,7 +147,7 @@ def _parse_directive_statement(line_number: int, label: str | None, tokens: list
         if len(operands) != 1:
             col = operands[0].column if operands else mnemonic_tok.column
             raise ParserError(line_number, ".ALLOC requires exactly one numeric operand", col)
-        if not operands[0].value.isdigit():
+        if not is_non_negative_integer(operands[0].value):
             raise ParserError(line_number, ".ALLOC operand must be numeric", operands[0].column)
 
     if mnemonic == ".DATA":
@@ -167,9 +160,9 @@ def _parse_directive_statement(line_number: int, label: str | None, tokens: list
         #   .DATA X =5
         if len(operands) == 1:
             pass
-        elif len(operands) == 3 and operands[1].value == "=" and operands[2].value.isdigit():
+        elif len(operands) == 3 and operands[1].value == "=" and is_integer_literal(operands[2].value):
             pass
-        elif len(operands) == 2 and operands[1].value.startswith("=") and operands[1].value[1:].isdigit():
+        elif len(operands) == 2 and operands[1].value.startswith("=") and is_integer_literal(operands[1].value[1:]):
             pass
         else:
             raise ParserError(
@@ -185,7 +178,7 @@ def _parse_directive_statement(line_number: int, label: str | None, tokens: list
         _validate_symbol_name(operands[0], "block name")
 
         # Empty block form: .BLOCK <name> <size>
-        if operands[1].value.isdigit():
+        if is_non_negative_integer(operands[1].value):
             if int(operands[1].value) <= 0:
                 raise ParserError(line_number, ".BLOCK size must be greater than zero", operands[1].column)
             if len(operands) > 2:
@@ -245,7 +238,7 @@ def _validate_block_initializer(line_number: int, init_tokens: list[Token]) -> N
         if expect_value:
             if tok.token_type != "IMMEDIATE":
                 raise ParserError(line_number, ".BLOCK initializer values must be in '=N' form", tok.column)
-            if len(tok.value) == 1 or not tok.value[1:].isdigit():
+            if len(tok.value) == 1 or not is_integer_literal(tok.value[1:]):
                 raise ParserError(line_number, ".BLOCK initializer values must be numeric", tok.column)
             values.append(tok.value[1:])
             expect_value = False
@@ -590,7 +583,7 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
                     )
                 )
                 continue
-            if not op[1:].isdigit():
+            if not is_integer_literal(op[1:]):
                 result.errors.append(
                     StructureIssue(
                         code="E023",
@@ -601,7 +594,8 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
                 )
             continue
 
-        # Default group: data-address instructions require one variable-like operand.
+        # PDF syntax requires a plain data symbol here. Base-index operations use the
+        # explicit block instructions (LOADA, iLOAD, iSTORE, iINCR, ...), not ARR[i].
         if len(operands) != 1:
             result.errors.append(
                 StructureIssue(
@@ -612,11 +606,11 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
                 )
             )
             continue
-        if parse_indexed_symbol(operands[0]) is None and not _IDENT_RE.match(operands[0]):
+        if not _IDENT_RE.match(operands[0]):
             result.errors.append(
                 StructureIssue(
                     code="E026",
-                    message=f"Instruction '{mnemonic}' data operand must be an identifier or indexed block element.",
+                    message=f"Instruction '{mnemonic}' data operand must be an identifier.",
                     line=st.line_number,
                     is_fatal=True,
                 )
@@ -659,27 +653,17 @@ def lower_dynamic_index_operands(
             lowered.append(st)
             continue
 
-        base_name, index_name = indexed
-        indirect_mnemonic = INDIRECT_MNEMONIC_MAP.get(st.mnemonic.upper())
-        if indirect_mnemonic is None:
-            errors.append(
-                ParserError(
-                    st.line_number,
-                    f"instruction '{st.mnemonic}' does not support dynamic indexed operand '{st.operands[0]}'",
-                    code="E026",
-                )
+        errors.append(
+            ParserError(
+                st.line_number,
+                (
+                    f"indexed operand syntax '{st.operands[0]}' is not part of the Halix v25 "
+                    "instruction set; use explicit base-index instructions like "
+                    "'LOADA <block>', 'iCLR', 'iLOAD', 'iSTORE', 'iINCR', and 'iDECR'"
+                ),
+                code="E026",
             )
-            lowered.append(st)
-            continue
-
-        lowered.extend(
-            [
-                Statement(st.line_number, st.label, "INSTRUCTION", "LOADA", [base_name]),
-                Statement(st.line_number, None, "INSTRUCTION", "MOVEB", []),
-                Statement(st.line_number, None, "INSTRUCTION", "LOAD", [index_name]),
-                Statement(st.line_number, None, "INSTRUCTION", "MOVEA", []),
-                Statement(st.line_number, None, "INSTRUCTION", indirect_mnemonic, []),
-            ]
         )
+        lowered.append(st)
 
     return lowered, errors
