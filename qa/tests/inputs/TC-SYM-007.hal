@@ -1,0 +1,22 @@
+        .ALLOC 4
+ARR .BLOCK =1,=2,=3
+TMP .DATA =0
+        .BEGIN
+LOADA   ARR
+iCLR
+iREAD
+iWRITE
+iDECR
+iADD
+iSUB
+iMULT
+iDIV
+iMOD
+iCLT
+iCLE
+iCEQ
+iCNE
+iCGE
+iCGT
+HALT
+        .END

@@ -1,12 +1,13 @@
-        .ALLOC 8
+        .ALLOC 5
 ARR .BLOCK =4,=7,=2
-i .DATA =0
 TMP .DATA =0
         .BEGIN
-LOOP:   LOAD    ARR[i]
+LOADA   ARR
+iCLR
+LOOP:   iLOAD
         STORE   TMP
-        INCR
-        STORE   i
-        BRANCH  LOOP
+        iINCR
+        LOAD    TMP
+        BRT     LOOP
         HALT
         .END

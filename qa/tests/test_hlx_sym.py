@@ -60,6 +60,33 @@ run("TC-SYM-006", "Location counter — 5 instructions at sequential addresses",
         ])),
     ])
 
+run("TC-SYM-007", "New i-instructions all encoded correctly — iREAD/iWRITE/iDECR/iADD etc",
+    "TC-SYM-007.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("17 instructions encoded", lambda c,o,f: "17 instructions encoded" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "17",
+            "3500","3600","3700","3800","4200","4300","4400","4500","4600","4700",
+            "4800","4900","5000","5100","5200","5300","9900",
+            "04",
+            "0001","0002","0003","0000"
+        ])),
+    ])
+
+run("TC-SYM-008", "New scalar/control instructions — SETI/ADDI/POW/SHACC/STOREA/BSUB/RET etc",
+    "TC-SYM-008.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("32 instructions encoded", lambda c,o,f: "32 instructions encoded" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "32",
+            "3500","3600","2405","2503","2602","2704","2802","2903",
+            "3100","3400","5400","5500","5600","5700","5805","5904",
+            "3003","0000","0303","1503","0904","1400","1804","1904",
+            "2004","2104","2204","2304","1230","3230","3300","9900",
+            "06",
+            "0001","0002","0003","0005","0003","0000"
+        ])),
+    ])
 
 if __name__ == "__main__":
     sys.exit(print_summary("TC-SYM"))
