@@ -2,7 +2,9 @@
 ARR .BLOCK =4,=7,=2
 n .DATA =0
         .BEGIN
-LOAD    ARR[0]
+LOADA   ARR
+iCLR
+iLOAD
 STORE   n
 HALT
         .END

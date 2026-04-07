@@ -1,9 +1,11 @@
-        .ALLOC 5
+        .ALLOC 4
 ARR .BLOCK =4,=7,=2
-i .DATA =1
 val .DATA =99
         .BEGIN
+LOADA   ARR
+iCLR
+iINCR
 LOAD    val
-STORE   ARR[i]
+iSTORE
 HALT
         .END

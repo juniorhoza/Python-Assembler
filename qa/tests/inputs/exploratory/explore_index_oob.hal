@@ -1,7 +1,8 @@
-        .ALLOC 4
+        .ALLOC 3
 ARR .BLOCK =4,=7,=2
-n .DATA =0
         .BEGIN
-LOAD    ARR[5]
+LOADA   UNDEFINED
+iCLR
+iLOAD
 HALT
         .END

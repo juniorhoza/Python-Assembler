@@ -18,7 +18,7 @@ opcode table loaded dynamically from halix_v25.opcode.
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement, parse_literal_indexed_symbol
+from services.parser import Statement, parse_literal_indexed_symbol, is_integer_literal, is_non_negative_integer
 
 HALIX_MEMORY_LIMIT = 100
 
@@ -87,7 +87,7 @@ def _parse_value(raw: str) -> int:
     Returns integer. Defaults to 9999 on failure (legacy behavior).
     """
     s = raw.lstrip("=").strip()
-    if s.isdigit():
+    if is_integer_literal(s):
         return int(s)
     return 9999
 
@@ -124,7 +124,7 @@ def _build_data_table(
 
         # ── .ALLOC ─────────────────────────────────────────────────────
         if st.mnemonic == ".ALLOC":
-            if st.operands and st.operands[0].isdigit():
+            if st.operands and is_non_negative_integer(st.operands[0]):
                 d_size = int(st.operands[0])
                 alloc_line = st.line_number
                 if d_size > HALIX_MEMORY_LIMIT:
@@ -245,7 +245,7 @@ def _build_data_table(
             block_name = st.operands[0].upper()
             init_values: list[str] = []
 
-            if st.operands[1].isdigit():
+            if is_non_negative_integer(st.operands[1]):
                 block_size = int(st.operands[1])
                 while len(init_values) < block_size:
                     init_values.append("9999")
@@ -254,7 +254,7 @@ def _build_data_table(
                     if tok == ",":
                         continue
                     clean = tok.lstrip("=").strip()
-                    if not clean.isdigit():
+                    if not is_integer_literal(clean):
                         errors.append(
                             Pass1Error(
                                 f".BLOCK initializer value '{tok}' is not numeric.",

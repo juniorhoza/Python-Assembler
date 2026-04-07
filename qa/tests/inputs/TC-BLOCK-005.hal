@@ -1,6 +1,8 @@
-        .ALLOC 2
+        .ALLOC 1
 ARR .BLOCK =99
         .BEGIN
-LOAD    ARR[0]
+LOADA   ARR
+iCLR
+iLOAD
 HALT
         .END

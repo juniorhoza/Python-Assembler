@@ -1,0 +1,39 @@
+        .ALLOC 6
+ARR .BLOCK =1,=2,=3
+a .DATA =5
+b .DATA =3
+c .DATA =0
+        .BEGIN
+LOADA   ARR
+iCLR
+SETI    =5
+ADDI    =3
+SUBI    =2
+MULTI   =4
+DIVI    =2
+MODI    =3
+SHACC
+SHINDX
+SHBASE
+MOVEB
+MOVEA
+iMOVEA
+STOREA  c
+STOREB  b
+POW     a
+NOOP
+LOAD    a
+DOUBLE  a
+MOD     b
+SET
+CLT     b
+CLE     b
+CEQ     b
+CNE     b
+CGE     b
+CGT     b
+BRF     DONE
+BSUB    DONE
+DONE:   RET
+        HALT
+        .END

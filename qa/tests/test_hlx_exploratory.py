@@ -48,11 +48,11 @@ run("EXPLORE-005", "Empty program — no instructions between .BEGIN and .END",
         (".hlx matches expected output", expect_hlx(["00","01","0000"])),
     ])
 
-run("EXPLORE-006", "ARR[5] out of bounds literal index — ERROR E030",
+run("EXPLORE-006", "LOADA on undefined variable — ERROR E030 caught",
     "exploratory/explore_index_oob.hal", [
         ("Exits with non-zero code", expect_error),
         ("ERROR E030 reported", lambda c,o,f: "e030" in o.lower()),
-        ("Exceeds block size mentioned", lambda c,o,f: "exceeds" in o.lower()),
+        ("Undefined variable mentioned", lambda c,o,f: "undefined" in o.lower()),
         ("No .hlx produced", expect_no_hlx),
     ])
 

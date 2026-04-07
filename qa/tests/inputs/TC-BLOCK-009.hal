@@ -1,9 +1,10 @@
-        .ALLOC 5
+        .ALLOC 4
 ARR .BLOCK =4,=7,=2
-I .DATA =1
-TMP .DATA =0
+n .DATA =0
         .BEGIN
-LOAD    ARR[I]
-STORE   TMP
+loada   ARR
+iclr
+iload
+store   n
 HALT
         .END

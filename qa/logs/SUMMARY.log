@@ -238,3 +238,23 @@ Run: 2026-04-02 | Branch: dev | FINAL SPRINT 4 COMPLETE RUN
          Test suite refactored into category files + master runner
          Negative .DATA values known constraint — out of scope per dev lead
 ------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-06 16:38:19 | Branch: dev | Commit: 8fc4203
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-06 16:41:24 | Branch: dev | Commit: 8fc4203
+PASS: 27 | FAIL: 4 | BLOCKED: 0 | NOT TESTED: 0
+Failed: TC-PAR-003 TC-DIR-001c TC-DIR-006 TC-CON-003
+
+------------------------------------------------------------
+Run: 2026-04-03 | Branch: dev | Post dev update — new instructions
+  run_all_tests.py TOTAL: 133 PASSED | 0 FAILED | 0 SKIPPED
+  Notes: Dev team pushed new instruction set (60 total opcodes)
+         TC-BLOCK 001/003/005/006/007/008/009 rewritten — old ARR[i] syntax removed
+         EXPLORE-006 updated — LOADA undefined var test
+         TC-SYM-007 added — 14 new i-instructions verified
+         TC-SYM-008 added — 18 new scalar/control instructions verified
+         All 133 tests passing, 0 failures
+------------------------------------------------------------

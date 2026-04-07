@@ -32,13 +32,13 @@ class LexicalError(Exception):
 _DIRECTIVE_RE = re.compile(r"^\.[A-Za-z][A-Za-z0-9_]*$")
 _LABEL_DEF_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*:$")
 _IMMEDIATE_RE = re.compile(r"^=\S+$")
-_NUMBER_RE = re.compile(r"^\d+$")
+_NUMBER_RE = re.compile(r"^-?\d+$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _INDEXED_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\[(?:\d+|[A-Za-z_][A-Za-z0-9_]*)\]$")
 
 
 def _invalid_char(raw: str) -> Optional[str]:
-    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:.=,[]")
+    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:.=,[]-")
     for ch in raw:
         if ch not in allowed:
             return ch

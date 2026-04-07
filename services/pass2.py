@@ -22,7 +22,7 @@ SCRUM-23: FR-GEN-001, FR-GEN-005
 from dataclasses import dataclass, field
 from typing import Optional
 
-from services.parser import Statement, parse_literal_indexed_symbol
+from services.parser import Statement, parse_literal_indexed_symbol, is_integer_literal
 from services.pass1 import Pass1Result, DataEntry, LabelEntry
 from services.HASM_opcode_Loader import OpcodeTable, OPERAND_NONE, OPERAND_BRANCH, OPERAND_IMMEDIATE, OPERAND_DATA
 
@@ -72,6 +72,10 @@ class Pass2Issue:
 
 def _zero_pad(n: int) -> str:
     return str(n).zfill(2)
+
+
+def _format_immediate_value(n: int) -> str:
+    return str(n).zfill(2) if n >= 0 else f"-{abs(n):01d}"
 
 
 def _resolve_data_operand(
@@ -251,7 +255,7 @@ def run_pass2(
                 raw_op = operands[0]
                 # Strip leading '=' — parser guarantees this format
                 val_str = raw_op.lstrip("=").strip()
-                if not val_str.isdigit():
+                if not is_integer_literal(val_str):
                     result.errors.append(
                         Pass2Issue(
                             code="E023",
@@ -262,7 +266,7 @@ def run_pass2(
                     machine_word = opcode + "00"
                 else:
                     ival = int(val_str)
-                    if ival > 99:
+                    if abs(ival) > 99:
                         result.warnings.append(
                             Pass2Issue(
                                 code="W005",
@@ -271,8 +275,9 @@ def run_pass2(
                                 is_fatal=False,
                             )
                         )
-                        ival = ival % 100
-                    machine_word = opcode + _zero_pad(ival)
+                        sign = -1 if ival < 0 else 1
+                        ival = sign * (abs(ival) % 100)
+                    machine_word = opcode + _format_immediate_value(ival)
 
         # ── Group: data address (variable name) ───────────────────────
         else:  # OPERAND_DATA
