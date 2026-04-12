@@ -416,16 +416,16 @@ def check_program_structure(statements: list[Statement]) -> StructureCheckResult
         if st.line_number < end_line and st.kind == "INSTRUCTION"
     ]
     if executable_before_end:
-        last_instruction = executable_before_end[-1]
-        if last_instruction.mnemonic != "HALT":
+        halts = [st for st in executable_before_end if st.mnemonic == "HALT"]
+        if not halts:
             result.errors.append(
                 StructureIssue(
                     code="E004",
                     message=(
-                        f"Last instruction before .END must be HALT, found "
-                        f"'{last_instruction.mnemonic}' at line {last_instruction.line_number}."
+                        "Program must contain a HALT instruction between .BEGIN and .END. "
+                        "HALT terminates main execution; subroutine code may appear after HALT."
                     ),
-                    line=last_instruction.line_number,
+                    line=end_line,
                     is_fatal=True,
                 )
             )
