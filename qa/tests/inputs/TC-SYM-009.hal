@@ -1,0 +1,26 @@
+        .ALLOC 7
+num1 .DATA
+num2 .DATA
+max .DATA =0
+pv_x .DATA =0
+pv_y .DATA =0
+        .BEGIN
+        READ    num1
+        READ    num2
+        LOAD    num1
+        STORE   pv_x
+        LOAD    num2
+        STORE   pv_y
+        BSUB    Max2
+        STORE   max
+        WRITE   max
+        HALT
+Max2:   NOOP
+        LOAD    pv_x
+        CGT     pv_y
+        BRF     ELSE
+        LOAD    pv_x
+        RET
+ELSE:   LOAD    pv_y
+        RET
+        .END

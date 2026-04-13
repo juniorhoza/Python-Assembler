@@ -70,6 +70,25 @@ run("TC-DIR-003c", "Instruction after .end — error E004, no .hlx produced",
         ("No .hlx produced", expect_no_hlx),
     ])
 
+run("TC-DIR-004", ".DATA = 7 with spaces around = — valid syntax",
+    "TC-DIR-004.hal", [
+        ("Exits with code 0", lambda c,o,f: c == 0),
+        ("Assembler execution OK", lambda c,o,f: "assembler execution ok" in o.lower()),
+        (".hlx matches expected output", expect_hlx([
+            "03",
+            "0300","0501","9900",
+            "02",
+            "0007","0003"
+        ])),
+    ])
+
+run("TC-DIR-005", ".DATA with no = prefix — ERROR E006 invalid format",
+    "TC-DIR-005.hal", [
+        ("Exits with non-zero code", expect_error),
+        ("Error E006 reported", lambda c,o,f: "e006" in o.lower()),
+        ("No .hlx produced", expect_no_hlx),
+    ])
+
 run("TC-DIR-006", ".Block allocates 5 slots — correct addresses",
     "TC-DIR-006.hal", [
         ("Exits with code 0", lambda c,o,f: c == 0),
