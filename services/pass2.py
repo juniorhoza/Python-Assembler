@@ -34,8 +34,8 @@ from services.HASM_opcode_Loader import OpcodeTable, OPERAND_NONE, OPERAND_BRANC
 @dataclass
 class EncodedInstruction:
     line_number: int
-    iaddr: str          # zero-padded 2-digit instruction address
-    machine_word: str   # 4-digit machine word string e.g. '0302'
+    iaddr: str          # zero-padded instruction address
+    machine_word: str   # 4- or 5-digit machine word string
     source_text: str    # original source line text for listing
 
 
@@ -70,17 +70,22 @@ class Pass2Issue:
 # Helpers
 # -----------------------------------------------------------------------
 
-def _zero_pad(n: int) -> str:
-    return str(n).zfill(2)
+def _zero_pad(n: int, width: int) -> str:
+    return str(n).zfill(width)
 
 
-def _format_immediate_value(n: int) -> str:
-    return str(n).zfill(2) if n >= 0 else f"-{abs(n):01d}"
+def _format_immediate_value(n: int, width: int) -> str:
+    if n >= 0:
+        return str(n).zfill(width)
+    return f"-{abs(n):0{max(1, width - 1)}d}"
 
 
 def _resolve_data_operand(
     operand: str,
     data_table: dict[str, DataEntry],
+    *,
+    operand_width: int,
+    missing_operand: str,
 ) -> tuple[str | None, Pass2Issue | None]:
     indexed = parse_literal_indexed_symbol(operand)
     if indexed is None:
@@ -89,9 +94,9 @@ def _resolve_data_operand(
             return None, Pass2Issue(
                 code="E030",
                 line=0,
-                message=f"undefined variable '{operand.upper()}' - addr 99 used.",
+                message=f"undefined variable '{operand.upper()}' - addr {missing_operand} used.",
             )
-        return data_entry.address, None
+        return _zero_pad(int(data_entry.address), operand_width), None
 
     base_name, element_index = indexed
     data_entry = data_table.get(base_name)
@@ -99,21 +104,21 @@ def _resolve_data_operand(
         return None, Pass2Issue(
             code="E030",
             line=0,
-            message=f"undefined variable '{base_name}' - addr 99 used.",
+            message=f"undefined variable '{base_name}' - addr {missing_operand} used.",
         )
     if not data_entry.is_block:
         return None, Pass2Issue(
             code="E030",
             line=0,
-            message=f"indexed operand '{operand.upper()}' refers to non-block symbol '{base_name}' - addr 99 used.",
+            message=f"indexed operand '{operand.upper()}' refers to non-block symbol '{base_name}' - addr {missing_operand} used.",
         )
     if element_index >= data_entry.size:
         return None, Pass2Issue(
             code="E030",
             line=0,
-            message=f"indexed operand '{operand.upper()}' exceeds block '{base_name}' size {data_entry.size} - addr 99 used.",
+            message=f"indexed operand '{operand.upper()}' exceeds block '{base_name}' size {data_entry.size} - addr {missing_operand} used.",
         )
-    return _zero_pad(int(data_entry.address) + element_index), None
+    return _zero_pad(int(data_entry.address) + element_index, operand_width), None
 
 
 # -----------------------------------------------------------------------
@@ -125,6 +130,8 @@ def run_pass2(
     pass1_result: Pass1Result,
     opcode_table: OpcodeTable,
     source_lines: list[str],
+    *,
+    program_length: int = 4,
 ) -> Pass2Result:
     """
     Encode all instructions between .BEGIN and .END into 4-digit
@@ -142,6 +149,9 @@ def run_pass2(
     result = Pass2Result()
     data_table = pass1_result.data_table
     label_table = pass1_result.label_table
+    operand_width = program_length - 2
+    zero_operand = "0" * operand_width
+    missing_operand = "9" * operand_width
 
     # Locate .BEGIN and .END boundaries
     begin_line: Optional[int] = None
@@ -196,10 +206,10 @@ def run_pass2(
                     message=f"unknown mnemonic '{mnemonic}' - opcode 00 used.",
                 )
             )
-            machine_word = "0000"
+            machine_word = "00" + zero_operand
             result.instructions.append(EncodedInstruction(
                 line_number=st.line_number,
-                iaddr=_zero_pad(i_addr),
+                iaddr=_zero_pad(i_addr, operand_width),
                 machine_word=machine_word,
                 source_text=raw_line,
             ))
@@ -212,7 +222,7 @@ def run_pass2(
 
         # ── Group: no operand ─────────────────────────────────────────
         if operand_type == OPERAND_NONE:
-            machine_word = opcode + "00"
+            machine_word = opcode + zero_operand
 
         # ── Group: branch (label address) ─────────────────────────────
         elif operand_type == OPERAND_BRANCH:
@@ -221,10 +231,10 @@ def run_pass2(
                     Pass2Issue(
                         code="E025",
                         line=st.line_number,
-                        message=f"'{mnemonic}' requires a label operand - addr 99 used.",
+                        message=f"'{mnemonic}' requires a label operand - addr {missing_operand} used.",
                     )
                 )
-                machine_word = opcode + "99"
+                machine_word = opcode + missing_operand
             else:
                 label_name = operands[0].upper()
                 label_entry = label_table.get(label_name)
@@ -233,10 +243,10 @@ def run_pass2(
                         Pass2Issue(
                             code="E021",
                             line=st.line_number,
-                            message=f"undefined label '{label_name}' - addr 99 used.",
+                            message=f"undefined label '{label_name}' - addr {missing_operand} used.",
                         )
                     )
-                    machine_word = opcode + "99"
+                    machine_word = opcode + missing_operand
                 else:
                     machine_word = opcode + label_entry.address
 
@@ -247,10 +257,10 @@ def run_pass2(
                     Pass2Issue(
                         code="E022",
                         line=st.line_number,
-                        message=f"'{mnemonic}' requires an immediate operand - value 00 used.",
+                        message=f"'{mnemonic}' requires an immediate operand - value {zero_operand} used.",
                     )
                 )
-                machine_word = opcode + "00"
+                machine_word = opcode + zero_operand
             else:
                 raw_op = operands[0]
                 # Strip leading '=' — parser guarantees this format
@@ -260,24 +270,27 @@ def run_pass2(
                         Pass2Issue(
                             code="E023",
                             line=st.line_number,
-                            message=f"immediate value '{raw_op}' is not numeric - value 00 used.",
+                            message=f"immediate value '{raw_op}' is not numeric - value {zero_operand} used.",
                         )
                     )
-                    machine_word = opcode + "00"
+                    machine_word = opcode + zero_operand
                 else:
                     ival = int(val_str)
-                    if abs(ival) > 99:
+                    positive_limit = (10 ** operand_width) - 1
+                    negative_limit = (10 ** max(1, operand_width - 1)) - 1
+                    if (ival >= 0 and ival > positive_limit) or (ival < 0 and abs(ival) > negative_limit):
                         result.warnings.append(
                             Pass2Issue(
                                 code="W005",
                                 line=st.line_number,
-                                message=f"immediate value {ival} exceeds 2 digits - truncated.",
+                                message=f"immediate value {ival} exceeds configured operand width {operand_width} - truncated.",
                                 is_fatal=False,
                             )
                         )
                         sign = -1 if ival < 0 else 1
-                        ival = sign * (abs(ival) % 100)
-                    machine_word = opcode + _format_immediate_value(ival)
+                        modulus = 10 ** (operand_width if ival >= 0 else max(1, operand_width - 1))
+                        ival = sign * (abs(ival) % modulus)
+                    machine_word = opcode + _format_immediate_value(ival, operand_width)
 
         # ── Group: data address (variable name) ───────────────────────
         else:  # OPERAND_DATA
@@ -286,22 +299,27 @@ def run_pass2(
                     Pass2Issue(
                         code="E026",
                         line=st.line_number,
-                        message=f"'{mnemonic}' requires a data operand - addr 99 used.",
+                        message=f"'{mnemonic}' requires a data operand - addr {missing_operand} used.",
                     )
                 )
-                machine_word = opcode + "99"
+                machine_word = opcode + missing_operand
             else:
-                resolved_addr, issue = _resolve_data_operand(operands[0], data_table)
+                resolved_addr, issue = _resolve_data_operand(
+                    operands[0],
+                    data_table,
+                    operand_width=operand_width,
+                    missing_operand=missing_operand,
+                )
                 if issue is not None:
                     issue.line = st.line_number
                     result.errors.append(issue)
-                    machine_word = opcode + "99"
+                    machine_word = opcode + missing_operand
                 else:
                     machine_word = opcode + resolved_addr
 
         result.instructions.append(EncodedInstruction(
             line_number=st.line_number,
-            iaddr=_zero_pad(i_addr),
+            iaddr=_zero_pad(i_addr, operand_width),
             machine_word=machine_word,
             source_text=raw_line,
         ))

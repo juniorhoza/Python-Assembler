@@ -1,0 +1,90 @@
+# ------------------------------------------
+# Halix Program
+#
+# Program Name: max4Subr.hal
+# Purpose:      Compute max of 4 numbers using subroutines.
+# Author:       key Dr. Jones 
+# Date:         
+# ----------------------------------------
+
+# ------------------------------------------------------
+# pseudocode
+#   int Max2(int x, int y)
+#   { if ( x > y) return x;
+#     else return y;
+#   }
+#   int main()
+#   { int num1, num2, num3, num4, max; 
+#      cin>>num1>>num2>>num3>>num4;
+#      max = Max2(num1, num2); cout << max;
+#      max = Max2(max, num3);  cout << max;
+#      max = Max2(max, num4);  cout << max;
+#   }
+
+# ------------------------------------------------------
+# Source File Below:
+# ------------------------------------------------------
+#Halix Program Structure w/ Subroutines:
+
+      .ALLOC 10
+num1  .DATA
+num2  .DATA
+num3  .DATA
+num4  .DATA
+max   .DATA  =0
+           # Subroutine Add2 parameters
+pv_x  .DATA  =1
+pv_y  .DATA  =2
+
+      .BEGIN
+      #  main
+              # cin>>num1>>num2>>num3>>num4;
+		READ  num1
+		READ  num2
+		READ  num3
+		READ  num4
+
+              # max = Max2(num1, num2)
+		LOAD  num1
+		STORE pv_x
+		LOAD  num2
+		STORE pv_y
+                BSUB  Max2
+		STORE max
+
+              # max = Max2(max, num3)
+		LOAD  max 
+		STORE pv_x
+		LOAD  num3
+		STORE pv_y
+                BSUB  Max2
+		STORE max
+
+              # max = Max2(max, num4)
+		LOAD  max 
+		STORE pv_x
+		LOAD  num4
+		STORE pv_y
+                BSUB  Max2
+		STORE max
+
+		WRITE max
+                HALT
+
+# -- SUBROUTINE  -----------------------
+#   int Max2(int x, int y)
+#   { if ( x > y) return x;
+#     else return y;
+#   }
+# ----------------------------------------
+Max2: NOOP
+      LOAD  pv_x
+      CGT   pv_y
+      BRF   ELSE
+      LOAD  pv_x
+      RET
+ELSE: LOAD  pv_y
+      RET
+
+      .END
+

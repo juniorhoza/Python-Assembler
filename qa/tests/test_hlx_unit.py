@@ -12,6 +12,7 @@ Each test prints PASS or FAIL with a clear reason.
 
 import sys
 import os
+import tempfile
 
 # Make sure services/ is importable from repo root
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)).replace("qa/tests", ""))
@@ -539,6 +540,33 @@ def test_par_020():
 run("PAR-020", "All explicit PDF block instructions assemble successfully", test_par_020)
 
 
+def test_par_021():
+    """Program length 5 produces 3-digit instruction addresses and 5-digit words"""
+    source = (
+        ".ALLOC 1\n"
+        "X .DATA =0\n"
+        ".BEGIN\n"
+        "LOAD X\n"
+        "BRANCH DONE\n"
+        "DONE: HALT\n"
+        ".END\n"
+    )
+    lines = source.splitlines(keepends=True)
+    tokens = tokenize_source(lines, opcode_mnemonics=OPCODES)
+    stmts = parse_tokens(tokens, total_lines=len(lines))
+    pass1_result = run_pass1(stmts, program_length=5)
+    assert not pass1_result.errors, f"Expected pass1 success, got {[str(e) for e in pass1_result.errors]}"
+    assert pass1_result.line_to_iaddr[4] == "000", f"Expected 3-digit iaddr, got {pass1_result.line_to_iaddr[4]}"
+    assert pass1_result.label_table["DONE"].address == "002", f"Expected 3-digit label address, got {pass1_result.label_table['DONE'].address}"
+    opcode_table = load_opcode_table(os.path.join(os.path.dirname(os.path.abspath(__file__)).replace('qa/tests', ''), 'halix_v25.opcode'))
+    pass2_result = run_pass2(stmts, pass1_result, opcode_table, lines, program_length=5)
+    assert pass2_result.ok, f"Expected pass2 success, got {[e.message for e in pass2_result.errors]}"
+    words = [instr.machine_word for instr in pass2_result.instructions]
+    assert words == ["03000", "10002", "99000"], f"Unexpected 5-digit machine words: {words}"
+
+run("PAR-021", "Program length 5 widens instruction addresses and words", test_par_021)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 3: STRUCTURE CHECK TESTS (check_program_structure)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -674,6 +702,45 @@ def test_str_012():
 run("STR-012", "SETI without = prefix detected as error E022", test_str_012)
 
 
+def test_str_013():
+    """HALT may appear before subroutine definitions and still pass"""
+    stmts = make_statements(
+        "        .ALLOC 3\n"
+        "x .DATA =1\n"
+        "y .DATA =2\n"
+        "tmp .DATA =0\n"
+        "        .BEGIN\n"
+        "        LOAD x\n"
+        "        STORE tmp\n"
+        "        HALT\n"
+        "SUBR:   LOAD y\n"
+        "        RET\n"
+        "        .END"
+    )
+    result = check_program_structure(stmts)
+    assert result.ok, f"Expected ok=True with subroutine after HALT, got {[e.message for e in result.errors]}"
+
+run("STR-013", "Subroutine instructions after HALT are allowed before .END", test_str_013)
+
+
+def test_str_014():
+    """Missing HALT before .END detected"""
+    stmts = make_statements(
+        "        .ALLOC 1\n"
+        "x .DATA =1\n"
+        "        .BEGIN\n"
+        "        LOAD x\n"
+        "        STORE x\n"
+        "        .END"
+    )
+    result = check_program_structure(stmts)
+    assert not result.ok, "Expected error when no HALT exists between .BEGIN and .END"
+    assert any("must contain a HALT instruction" in e.message for e in result.errors), \
+        f"Unexpected errors: {[e.message for e in result.errors]}"
+
+run("STR-014", "Missing HALT between .BEGIN and .END detected", test_str_014)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # SECTION 4: CLI ARGUMENT TESTS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -749,6 +816,60 @@ def test_cli_007():
     assert code != 0, f"Expected non-zero exit code for file missing .END, got {code}"
 
 run("CLI-007", "File missing .END returns non-zero exit code", test_cli_007)
+
+
+def test_cli_008():
+    """--progl 5 produces widened .hlx format"""
+    repo_root = os.path.dirname(os.path.abspath(__file__)).replace("/qa/tests", "")
+    with tempfile.NamedTemporaryFile("w", suffix=".hal", dir=repo_root, delete=False) as tmp:
+        tmp.write(".ALLOC 1\nX .DATA =0\n.BEGIN\nLOAD X\nHALT\n.END\n")
+        tmp_path = tmp.name
+    try:
+        code, _ = run_cli(["--progl", "5", tmp_path])
+        assert code == 0, f"Expected exit code 0 for --progl 5, got {code}"
+        hlx_path = tmp_path[:-4] + ".hlx"
+        with open(hlx_path, "r", encoding="utf-8") as f:
+            lines = [line.rstrip("\n") for line in f]
+        assert lines[0] == "002", f"Expected 3-digit code size line, got {lines[0]}"
+        assert lines[1] == "03000", f"Expected 5-digit LOAD word, got {lines[1]}"
+        assert lines[2] == "99000", f"Expected 5-digit HALT word, got {lines[2]}"
+    finally:
+        for suffix in (".hal", ".hlx", ".hll"):
+            path = tmp_path[:-4] + suffix
+            if os.path.exists(path):
+                os.remove(path)
+
+run("CLI-008", "--progl 5 widens .hlx code size and instruction words", test_cli_008)
+
+
+def test_cli_009():
+    """.hconfig supports existing bracket format"""
+    repo_root = os.path.dirname(os.path.abspath(__file__)).replace("/qa/tests", "")
+    with tempfile.TemporaryDirectory(dir=repo_root) as tmpdir:
+        hal_path = os.path.join(tmpdir, "cfg_bracket.hal")
+        with open(hal_path, "w", encoding="utf-8") as f:
+            f.write(".ALLOC 1\nX .DATA =0\n.BEGIN\nHALT\n.END\n")
+        with open(os.path.join(tmpdir, ".hconfig"), "w", encoding="utf-8") as f:
+            f.write("[10,10]\n")
+        code, _ = run_cli([hal_path])
+        assert code == 0, f"Expected exit code 0 with bracket .hconfig, got {code}"
+
+run("CLI-009", ".hconfig bracket format is accepted", test_cli_009)
+
+
+def test_cli_010():
+    """.hconfig supports key=value format on separate lines"""
+    repo_root = os.path.dirname(os.path.abspath(__file__)).replace("/qa/tests", "")
+    with tempfile.TemporaryDirectory(dir=repo_root) as tmpdir:
+        hal_path = os.path.join(tmpdir, "cfg_keyvalue.hal")
+        with open(hal_path, "w", encoding="utf-8") as f:
+            f.write(".ALLOC 1\nX .DATA =0\n.BEGIN\nHALT\n.END\n")
+        with open(os.path.join(tmpdir, ".hconfig"), "w", encoding="utf-8") as f:
+            f.write("label_length=10\nmnemonic_length=10\n")
+        code, _ = run_cli([hal_path])
+        assert code == 0, f"Expected exit code 0 with key=value .hconfig, got {code}"
+
+run("CLI-010", ".hconfig key=value format is accepted", test_cli_010)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -9,6 +9,13 @@ SCRUM-23: FR-GEN-002, FR-GEN-003, FR-GEN-004
 from services.pass1 import Pass1Result
 from services.pass2 import Pass2Result
 
+BLOCK_INSTRUCTION_MNEMONICS = {
+    "SHINDX", "LOADA", "ICLR", "IREAD", "IWRITE", "ILOAD", "ISTORE", "IINCR",
+    "IDECR", "IADD", "ISUB", "IMULT", "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ",
+    "ICNE", "ICGE", "ICGT", "SHBASE", "MOVEB", "MOVEA", "IMOVEA", "STOREA",
+    "STOREB",
+}
+
 
 # -----------------------------------------------------------------------
 # .hlx writer
@@ -21,14 +28,16 @@ def write_hlx(hlx_path: str, pass1_result: Pass1Result, pass2_result: Pass2Resul
     """
     with open(hlx_path, "w") as f:
 
-        # Line 1: code size (2-digit zero-padded)
-        f.write(f"{pass1_result.code_size:02d}\n")
+        addr_width = len(pass2_result.instructions[0].iaddr) if pass2_result.instructions else 2
+
+        # Line 1: code size (same width as instruction addresses)
+        f.write(f"{pass1_result.code_size:0{addr_width}d}\n")
 
         # One machine word per instruction in address order
         for instr in sorted(pass2_result.instructions, key=lambda x: int(x.iaddr)):
             f.write(f"{instr.machine_word}\n")
 
-        # Data memory size
+        # Data memory size remains 2 digits because data addresses are unchanged.
         f.write(f"{pass1_result.data_size:02d}\n")
 
         # Data values in address order
@@ -101,6 +110,8 @@ def write_hll(
         instr_map: dict[int, list] = {}
         for instr in pass2_result.instructions:
             instr_map.setdefault(instr.line_number, []).append(instr)
+        instruction_width = len(pass2_result.instructions[0].iaddr) if pass2_result.instructions else 2
+        machine_word_width = len(pass2_result.instructions[0].machine_word) if pass2_result.instructions else 4
         data_line_map = _build_data_line_map(pass1_result, statements, source_lines)
         statement_map = {st.line_number: st for st in statements}
 
@@ -125,7 +136,9 @@ def write_hll(
                 f.write(f"{addr}  {value}  {rendered_source}\n")
                 continue
 
-            f.write(f"          {rendered_source}\n")
+            instruction_blank = " " * instruction_width
+            machine_blank = " " * machine_word_width
+            f.write(f"{instruction_blank}  {machine_blank}  {rendered_source}\n")
 
 
 # -----------------------------------------------------------------------
@@ -163,6 +176,16 @@ def _render_source_line(statement, raw_line: str, source_columns: tuple[int, int
 
     label_width, mnemonic_width = source_columns
     code_part, comment_part = _split_comment(raw_line)
+
+    # Preserve the original source spelling for the explicit base-index instruction set.
+    # This keeps PDF-style lowercase mnemonics such as "iLOAD" intact in the listing.
+    if statement.kind == "INSTRUCTION" and (statement.mnemonic or "") in BLOCK_INSTRUCTION_MNEMONICS:
+        rendered = code_part.rstrip()
+        if comment_part:
+            if rendered:
+                return f"{rendered}  {comment_part}"
+            return comment_part
+        return rendered
 
     label_text = ""
     mnemonic_text = ""
