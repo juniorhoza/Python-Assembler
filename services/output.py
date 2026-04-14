@@ -170,55 +170,16 @@ def _build_data_line_map(
 
 
 def _render_source_line(statement, raw_line: str, source_columns: tuple[int, int]) -> str:
-    """Render the source portion of a listing line using fixed label/mnemonic columns."""
-    if statement.kind == "BLANK":
-        return raw_line
-
-    label_width, mnemonic_width = source_columns
+    """Render the source portion of a listing line preserving original source spelling."""
     code_part, comment_part = _split_comment(raw_line)
-
-    # Preserve the original source spelling for the explicit base-index instruction set.
-    # This keeps PDF-style lowercase mnemonics such as "iLOAD" intact in the listing.
-    if statement.kind == "INSTRUCTION" and (statement.mnemonic or "") in BLOCK_INSTRUCTION_MNEMONICS:
-        rendered = code_part.rstrip()
-        if comment_part:
-            if rendered:
-                return f"{rendered}  {comment_part}"
-            return comment_part
-        return rendered
-
-    label_text = ""
-    mnemonic_text = ""
-    operand_text = ""
-
-    if statement.kind == "INSTRUCTION":
-        if statement.label is not None:
-            label_text = f"{statement.label}:"
-        mnemonic_text = statement.mnemonic or ""
-        operand_text = _join_operand_tokens(statement.operands)
-    elif statement.kind == "DIRECTIVE":
-        mnemonic_text = statement.mnemonic or ""
-        operands = list(statement.operands)
-        if statement.mnemonic in {".DATA", ".BLOCK"} and operands:
-            label_text = operands[0]
-            operands = operands[1:]
-        elif statement.label is not None:
-            label_text = f"{statement.label}:"
-        operand_text = _join_operand_tokens(operands)
-
-    rendered = f"{label_text:<{label_width}}{mnemonic_text:<{mnemonic_width}}"
-    if operand_text:
-        rendered = f"{rendered}{operand_text}"
-    rendered = rendered.rstrip()
+    rendered = code_part.rstrip()
 
     if comment_part:
         if rendered:
             return f"{rendered}  {comment_part}"
         return comment_part
 
-    if rendered:
-        return rendered
-    return code_part.rstrip()
+    return rendered
 
 
 def _split_comment(raw_line: str) -> tuple[str, str]:
