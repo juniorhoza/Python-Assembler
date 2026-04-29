@@ -85,6 +85,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Column widths for .hll source formatting as LABEL,MNEMONIC (example: --cols 8,10).",
     )
     parser.add_argument(
+        "--progl",
+        type=int,
+        choices=[4, 5],
+        default=4,
+        help="Program length / instruction word width: 4 supports 100 instructions, 5 supports 1000.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         help="Custom output basename. Generates <output>.hlx and <output>.hll.",
@@ -133,6 +140,36 @@ def _parse_cols_value(raw_value: str) -> tuple[int, int]:
     return int(parts[0]), int(parts[1])
 
 
+def _parse_hconfig_contents(raw_value: str) -> tuple[int, int]:
+    stripped = raw_value.strip()
+    if not stripped:
+        raise ValueError("configuration is empty")
+
+    if "\n" not in stripped and "=" not in stripped:
+        if stripped.startswith("[") and stripped.endswith("]"):
+            stripped = stripped[1:-1].strip()
+        return _parse_cols_value(stripped)
+
+    values: dict[str, int] = {}
+    for line in stripped.splitlines():
+        entry = line.strip()
+        if not entry:
+            continue
+        if "=" not in entry:
+            raise ValueError("expected 'label_length=<n>' and 'mnemonic_length=<n>' entries")
+        key, value = [part.strip() for part in entry.split("=", 1)]
+        if key not in {"label_length", "mnemonic_length"}:
+            raise ValueError(f"unknown configuration key '{key}'")
+        if not value.isdigit():
+            raise ValueError(f"value for '{key}' must be numeric")
+        values[key] = int(value)
+
+    if "label_length" not in values or "mnemonic_length" not in values:
+        raise ValueError("both 'label_length' and 'mnemonic_length' must be provided")
+
+    return values["label_length"], values["mnemonic_length"]
+
+
 def _resolve_hconfig_path(source_file: str) -> str | None:
     source_dir = os.path.dirname(os.path.abspath(source_file))
     source_config = os.path.join(source_dir, ".hconfig")
@@ -159,7 +196,7 @@ def resolve_listing_columns(args, error_handler: ErrorHandler, source_file: str)
         if config_path is not None:
             try:
                 with open(config_path, "r", encoding="utf-8") as config_file:
-                    raw_value = config_file.readline().strip()
+                    raw_value = config_file.read()
             except OSError as e:
                 error_handler.report(
                     code="E000",
@@ -173,11 +210,13 @@ def resolve_listing_columns(args, error_handler: ErrorHandler, source_file: str)
     if raw_value is None or raw_value == "":
         return None
 
-    if raw_value.startswith("[") and raw_value.endswith("]"):
-        raw_value = raw_value[1:-1].strip()
-
     try:
-        label_width, mnemonic_width = _parse_cols_value(raw_value)
+        if args.cols is not None:
+            if raw_value.startswith("[") and raw_value.endswith("]"):
+                raw_value = raw_value[1:-1].strip()
+            label_width, mnemonic_width = _parse_cols_value(raw_value)
+        else:
+            label_width, mnemonic_width = _parse_hconfig_contents(raw_value)
     except ValueError as e:
         source_hint = "--cols" if args.cols is not None else config_path or ".hconfig"
         error_handler.report(
@@ -267,7 +306,7 @@ def _print_trace_pass1(pass1_result) -> None:
 
     print(
         f"\n[TRACE] PASS1 SUMMARY\n"
-        f"  code_size={pass1_result.code_size:02d}\n"
+        f"  code_size={pass1_result.code_size}\n"
         f"  data_size={pass1_result.data_size:02d}"
     )
     if pass1_result.warnings:
@@ -315,6 +354,7 @@ def main():
     print(f"  Source:  {source_file}")
     print(f"  Output:  {hlx_file}  (machine code)")
     print(f"           {hll_file}  (listing)")
+    print(f"  ProgL:   {args.progl}  (instruction word digits)")
     if args.s:
         print(f"           {sym_file}  (symbol dump)")
     print()
@@ -430,7 +470,7 @@ def main():
     # ------------------------------------------------------------------
     # Step 6: Pass 1 — build data/label tables and track location counters
     # ------------------------------------------------------------------
-    pass1_result = run_pass1(statements)
+    pass1_result = run_pass1(statements, program_length=args.progl)
     if pass1_result.errors:
         for err in pass1_result.errors:
             error_handler.report(
@@ -446,7 +486,7 @@ def main():
         "Pass1 OK: "
         f"{len(pass1_result.data_table)} data symbols, "
         f"{len(pass1_result.label_table)} labels, "
-        f"code_size={pass1_result.code_size:02d}, "
+        f"code_size={pass1_result.code_size}, "
         f"data_size={pass1_result.data_size:02d}."
     )
     for warning in pass1_result.warnings:
@@ -463,6 +503,7 @@ def main():
             pass1_result=pass1_result,
             opcode_table=opcode_table,
             source_lines=source_lines,
+            program_length=args.progl,
         )
     except Pass2Error as e:
         error_handler.report(

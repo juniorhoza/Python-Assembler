@@ -9,6 +9,13 @@ SCRUM-23: FR-GEN-002, FR-GEN-003, FR-GEN-004
 from services.pass1 import Pass1Result
 from services.pass2 import Pass2Result
 
+BLOCK_INSTRUCTION_MNEMONICS = {
+    "SHINDX", "LOADA", "ICLR", "IREAD", "IWRITE", "ILOAD", "ISTORE", "IINCR",
+    "IDECR", "IADD", "ISUB", "IMULT", "IDIV", "IMOD", "ICLT", "ICLE", "ICEQ",
+    "ICNE", "ICGE", "ICGT", "SHBASE", "MOVEB", "MOVEA", "IMOVEA", "STOREA",
+    "STOREB",
+}
+
 
 # -----------------------------------------------------------------------
 # .hlx writer
@@ -21,14 +28,16 @@ def write_hlx(hlx_path: str, pass1_result: Pass1Result, pass2_result: Pass2Resul
     """
     with open(hlx_path, "w") as f:
 
-        # Line 1: code size (2-digit zero-padded)
-        f.write(f"{pass1_result.code_size:02d}\n")
+        addr_width = len(pass2_result.instructions[0].iaddr) if pass2_result.instructions else 2
+
+        # Line 1: code size (same width as instruction addresses)
+        f.write(f"{pass1_result.code_size:0{addr_width}d}\n")
 
         # One machine word per instruction in address order
         for instr in sorted(pass2_result.instructions, key=lambda x: int(x.iaddr)):
             f.write(f"{instr.machine_word}\n")
 
-        # Data memory size
+        # Data memory size remains 2 digits because data addresses are unchanged.
         f.write(f"{pass1_result.data_size:02d}\n")
 
         # Data values in address order
@@ -101,6 +110,8 @@ def write_hll(
         instr_map: dict[int, list] = {}
         for instr in pass2_result.instructions:
             instr_map.setdefault(instr.line_number, []).append(instr)
+        instruction_width = len(pass2_result.instructions[0].iaddr) if pass2_result.instructions else 2
+        machine_word_width = len(pass2_result.instructions[0].machine_word) if pass2_result.instructions else 4
         data_line_map = _build_data_line_map(pass1_result, statements, source_lines)
         statement_map = {st.line_number: st for st in statements}
 
@@ -125,7 +136,9 @@ def write_hll(
                 f.write(f"{addr}  {value}  {rendered_source}\n")
                 continue
 
-            f.write(f"          {rendered_source}\n")
+            instruction_blank = " " * instruction_width
+            machine_blank = " " * machine_word_width
+            f.write(f"{instruction_blank}  {machine_blank}  {rendered_source}\n")
 
 
 # -----------------------------------------------------------------------
@@ -157,45 +170,16 @@ def _build_data_line_map(
 
 
 def _render_source_line(statement, raw_line: str, source_columns: tuple[int, int]) -> str:
-    """Render the source portion of a listing line using fixed label/mnemonic columns."""
-    if statement.kind == "BLANK":
-        return raw_line
-
-    label_width, mnemonic_width = source_columns
+    """Render the source portion of a listing line preserving original source spelling."""
     code_part, comment_part = _split_comment(raw_line)
-
-    label_text = ""
-    mnemonic_text = ""
-    operand_text = ""
-
-    if statement.kind == "INSTRUCTION":
-        if statement.label is not None:
-            label_text = f"{statement.label}:"
-        mnemonic_text = statement.mnemonic or ""
-        operand_text = _join_operand_tokens(statement.operands)
-    elif statement.kind == "DIRECTIVE":
-        mnemonic_text = statement.mnemonic or ""
-        operands = list(statement.operands)
-        if statement.mnemonic in {".DATA", ".BLOCK"} and operands:
-            label_text = operands[0]
-            operands = operands[1:]
-        elif statement.label is not None:
-            label_text = f"{statement.label}:"
-        operand_text = _join_operand_tokens(operands)
-
-    rendered = f"{label_text:<{label_width}}{mnemonic_text:<{mnemonic_width}}"
-    if operand_text:
-        rendered = f"{rendered}{operand_text}"
-    rendered = rendered.rstrip()
+    rendered = code_part.rstrip()
 
     if comment_part:
         if rendered:
             return f"{rendered}  {comment_part}"
         return comment_part
 
-    if rendered:
-        return rendered
-    return code_part.rstrip()
+    return rendered
 
 
 def _split_comment(raw_line: str) -> tuple[str, str]:

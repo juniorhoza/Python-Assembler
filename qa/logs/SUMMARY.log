@@ -258,3 +258,24 @@ Run: 2026-04-03 | Branch: dev | Post dev update — new instructions
          TC-SYM-008 added — 18 new scalar/control instructions verified
          All 133 tests passing, 0 failures
 ------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-03 | Branch: dev | Complex testing + new instructions
+  run_all_tests.py TOTAL: 144 PASSED | 0 FAILED | 0 SKIPPED
+  Notes: TC-SYM-010: Multiple subroutines (AddTwo + Double)
+         TC-SYM-011: Array operations with subroutine (sum array)
+         TC-SYM-012: --progl 5 with subroutines (Max2, 5-digit words)
+         TC-SYM-013: Find max in array (loop + CGT/BRF/iLOAD)
+         TC-SYM-014: Fibonacci loop (ADD/STORE/BRT pattern)
+         TC-SYM-015: Nested conditions (ADDI/SUBI/MULTI/CGT/BRF)
+         Bug reported: .hll uppercases variable names (dev team fixing)
+         All 144 tests passing, 0 failures
+------------------------------------------------------------
+------------------------------------------------------------
+Run: 2026-04-03 | Branch: dev | Missing tests filled in
+  run_all_tests.py TOTAL: 147 PASSED | 0 FAILED | 0 SKIPPED
+  Notes: TC-DIR-004: .DATA = 7 with spaces around = (valid syntax)
+         TC-DIR-005: .DATA with no = prefix (ERROR E006)
+         TC-SYM-009: Max2 subroutine — professor's pattern
+         All gaps filled — no more missing TC numbers
+         147 tests passing, 0 failures
+------------------------------------------------------------

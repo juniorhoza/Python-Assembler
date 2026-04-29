@@ -1,0 +1,8 @@
+        .ALLOC 2
+x .DATA = 7
+y .DATA =3
+        .BEGIN
+LOAD    x
+ADD     y
+HALT
+        .END

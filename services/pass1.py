@@ -20,7 +20,7 @@ from typing import Optional
 
 from services.parser import Statement, parse_literal_indexed_symbol, is_integer_literal, is_non_negative_integer
 
-HALIX_MEMORY_LIMIT = 100
+HALIX_DATA_MEMORY_LIMIT = 100
 
 
 # -----------------------------------------------------------------------
@@ -71,9 +71,9 @@ class Pass1Error(Exception):
 # Helpers
 # -----------------------------------------------------------------------
 
-def _zero_pad_addr(n: int) -> str:
-    """Return zero-padded 2-digit address string."""
-    return str(n).zfill(2)
+def _zero_pad_addr(n: int, width: int = 2) -> str:
+    """Return zero-padded address string."""
+    return str(n).zfill(width)
 
 
 def _zero_pad_value(v: int) -> str:
@@ -127,7 +127,7 @@ def _build_data_table(
             if st.operands and is_non_negative_integer(st.operands[0]):
                 d_size = int(st.operands[0])
                 alloc_line = st.line_number
-                if d_size > HALIX_MEMORY_LIMIT:
+                if d_size > HALIX_DATA_MEMORY_LIMIT:
                     errors.append(
                         Pass1Error(
                             f".ALLOC value {d_size} exceeds Halix data memory limit 99.",
@@ -199,7 +199,7 @@ def _build_data_table(
                 )
                 continue
 
-            if d_addr >= HALIX_MEMORY_LIMIT:
+            if d_addr >= HALIX_DATA_MEMORY_LIMIT:
                 errors.append(
                     Pass1Error(
                         "data memory limit exceeded. Halix data addresses range from 00 to 99.",
@@ -283,7 +283,7 @@ def _build_data_table(
                 )
                 continue
 
-            if d_addr + block_size > HALIX_MEMORY_LIMIT:
+            if d_addr + block_size > HALIX_DATA_MEMORY_LIMIT:
                 errors.append(
                     Pass1Error(
                         f".BLOCK '{block_name}' with size {block_size} exceeds Halix data memory limit 99.",
@@ -324,6 +324,8 @@ def _build_data_table(
 
 def _build_label_table(
     statements: list[Statement],
+    *,
+    addr_width: int,
 ) -> tuple[dict[str, LabelEntry], dict[int, str], int, list[str], list[Pass1Error]]:
     """
     Scan executable statements between .BEGIN and .END.
@@ -359,6 +361,7 @@ def _build_label_table(
         return label_table, line_to_iaddr, 0, warnings, errors
 
     i_addr = 0
+    instruction_limit = 10 ** addr_width
 
     for st in statements:
         # Only process lines strictly between .BEGIN and .END
@@ -374,10 +377,13 @@ def _build_label_table(
             continue
 
         # Record label if present — label gets current address
-        if i_addr >= HALIX_MEMORY_LIMIT:
+        if i_addr >= instruction_limit:
             errors.append(
                 Pass1Error(
-                    "instruction memory limit exceeded. Halix instruction addresses range from 00 to 99.",
+                    (
+                        "instruction memory limit exceeded. Halix instruction addresses range from "
+                        f"{_zero_pad_addr(0, addr_width)} to {_zero_pad_addr(instruction_limit - 1, addr_width)}."
+                    ),
                     line=st.line_number,
                     code="E031",
                 )
@@ -397,12 +403,12 @@ def _build_label_table(
             else:
                 label_table[label_name] = LabelEntry(
                     name=label_name,
-                    address=_zero_pad_addr(i_addr),
+                    address=_zero_pad_addr(i_addr, addr_width),
                     line_number=st.line_number,
                 )
 
         # Record instruction address for this line
-        line_to_iaddr[st.line_number] = _zero_pad_addr(i_addr)
+        line_to_iaddr[st.line_number] = _zero_pad_addr(i_addr, addr_width)
         i_addr += 1
 
     return label_table, line_to_iaddr, i_addr, warnings, errors
@@ -412,7 +418,7 @@ def _build_label_table(
 # Public entry point
 # -----------------------------------------------------------------------
 
-def run_pass1(statements: list[Statement]) -> Pass1Result:
+def run_pass1(statements: list[Statement], *, program_length: int = 4) -> Pass1Result:
     """
     Run Pass 1 on the parsed statement list.
 
@@ -427,6 +433,7 @@ def run_pass1(statements: list[Statement]) -> Pass1Result:
         Pass1Error on fatal structural errors.
     """
     result = Pass1Result()
+    addr_width = program_length - 2
 
     # Sub-pass 1a: data and block table
     data_table, data_size, data_warnings, data_errors = _build_data_table(statements)
@@ -436,7 +443,10 @@ def run_pass1(statements: list[Statement]) -> Pass1Result:
     result.errors.extend(data_errors)
 
     # Sub-pass 1b: label table and location counter
-    label_table, line_to_iaddr, code_size, label_warnings, label_errors = _build_label_table(statements)
+    label_table, line_to_iaddr, code_size, label_warnings, label_errors = _build_label_table(
+        statements,
+        addr_width=addr_width,
+    )
     result.label_table = label_table
     result.line_to_iaddr = line_to_iaddr
     result.code_size = code_size
